@@ -107,8 +107,6 @@ observe_media_viewer({media_viewer, _Id, Props, _Filename, _Options}, _Context) 
 %% @doc Return the filename of a still image to be used for image tags.
 %% @spec observe_media_stillimage(Notification, _Context) -> undefined | {ok, Filename}
 observe_media_stillimage({media_stillimage, Id, Props}, Context) ->
-    ?DEBUG(Id),
-    ?DEBUG(Props),
     case proplists:get_value(mime, Props) of
         ?OEMBED_MIME ->
             case m_rsc:p(Id, depiction, Context) of
@@ -146,7 +144,7 @@ event({submit, {add_video_embed, EventProps}, _TriggerId, _TargetId}, Context) -
             Props = [
                 {title, Title},
                 {is_published, true},
-                {category, video},
+                {category, media},
                 {mime, ?OEMBED_MIME},
                 {oembed_url, EmbedUrl}
             ],
@@ -183,7 +181,6 @@ event({submit, {add_video_embed, EventProps}, _TriggerId, _TargetId}, Context) -
         %% Update the current page
         N when is_integer(N) ->
             Props = [
-                {category, video},
                 {oembed_url, EmbedUrl}
             ],
             case m_rsc:update(Id, Props, Context) of
@@ -221,15 +218,18 @@ preview_create(MediaId, MediaProps, Context) ->
             Json = oembed_request(Url, Context),
             %% store found properties in the media part of the rsc
             ok = m_media:replace(MediaId, [{oembed, Json} | MediaProps], Context),
-            case proplists:lookup(thumbnail_url, Json) of
-                {thumbnail_url, ThumbUrl} ->
-                    ?DEBUG("downloading.."),
-                    {CT, ImageData} = get_thumbnail(ThumbUrl, Context),
-                    {ok, _} = m_media:save_preview(MediaId, ImageData, CT, Context);
-                _ ->
-                    nop
-            end,
-            ?DEBUG(Json)
+            Type = proplists:get_value(type, Json),
+            case preview_url_from_json(Type, Json) of
+                undefined -> nop;
+                ThumbUrl ->
+                    {CT, ImageData} = thumbnail_request(ThumbUrl, Context),
+                    {ok, _} = m_media:save_preview(MediaId, ImageData, CT, Context),
+                    %% move to correct category if rsc is a 'media'
+                    case m_rsc:is_a(MediaId, media, Context) of
+                        true -> m_rsc:update(MediaId, [{category, type_to_category(Type)}], Context);
+                        false -> m_rsc:touch(MediaId, Context)
+                    end
+            end
     end.
 
 
@@ -247,7 +247,7 @@ oembed_request(Url, Context) ->
 
 
 %% @doc Given a thumbnail URL, download it and return the content type plus image data pair.
-get_thumbnail(ThumbUrl, Context) ->
+thumbnail_request(ThumbUrl, Context) ->
     F = fun() ->
                 {ok, {{_, 200, _}, Headers, ImageData}} = http:request(get, {z_convert:to_list(ThumbUrl), []}, [], []),
                 CT = case proplists:lookup("content-type", Headers) of
@@ -257,3 +257,16 @@ get_thumbnail(ThumbUrl, Context) ->
                 {CT, ImageData}
         end,
     z_depcache:memo(F, {oembed_thumbnail, ThumbUrl}, 3600, Context).
+
+
+%% @doc Get the preview URL from JSON structure. Either the thumbnail
+%% URL for non-photo elements, or the full URL for photo elements.
+preview_url_from_json(<<"photo">>, Json) ->
+    proplists:get_value(url, Json);
+preview_url_from_json(_Type, Json) ->
+    proplists:get_value(thumbnail_url, Json).
+
+
+type_to_category(<<"photo">>) -> image;
+type_to_category(<<"video">>) -> video;
+type_to_category(_) -> document.
