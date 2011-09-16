@@ -141,8 +141,10 @@ event({submit, {add_video_embed, EventProps}, _TriggerId, _TargetId}, Context) -
             SubjectId = proplists:get_value(subject_id, EventProps),
             Predicate = proplists:get_value(predicate, EventProps, depiction),
             Title   = z_context:get_q_validated("title", Context),
+            Summary = z_context:get_q("summary", Context),
             Props = [
                 {title, Title},
+                {summary, Summary},
                 {is_published, true},
                 {category, media},
                 {mime, ?OEMBED_MIME},
@@ -199,9 +201,9 @@ event({postback, {do_oembed, []}, _TriggerId, _TargetId}, Context) ->
             z_render:growl_error(?__("Invalid media URL", Context), Context);
         Json ->
             %% Fill title
-            z_context:add_script_page(["$('#oembed-title').val('", proplists:get_value(title, Json, []), "');"], Context),
+            z_context:add_script_page(["$('#oembed-title').val('", z_utils:js_escape(proplists:get_value(title, Json, [])), "');"], Context),
             %% And summary
-            z_context:add_script_page(["$('#oembed-summary').val('", proplists:get_value(description, Json, []), "');"], Context),
+            z_context:add_script_page(["$('#oembed-summary').val('", z_utils:js_escape(proplists:get_value(description, Json, [])), "');"], Context),
             z_render:growl("Detected media item", Context)
     end.
 
