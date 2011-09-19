@@ -40,7 +40,7 @@ list(_Context) ->
      },
 
      #oembed_provider{
-       url_re="^https?://flickr\\.com/photos/[-.\\w@]+/\\d+/?",
+       url_re="^https?://.+flickr\\.com/photos/[-.\\w@]+/\\d+/?",
        endpoint_url="http://www.flickr.com/services/oembed/",
        title="Flickr Photos"
      },
@@ -64,7 +64,7 @@ list(_Context) ->
      },
 
      #oembed_provider{
-       url_re="^https?://revision3\\.com/.+",
+       url_re="^https?://.+revision3\\.com/.+",
        endpoint_url="http://revision3.com/api/oembed/",
        title="Revision3"
      },
@@ -121,6 +121,12 @@ list(_Context) ->
        url_re="^https?://photobucket\\.com/(albums|groups)/.+",
        endpoint_url="http://photobucket.com/oembed",
        title="Photobucket"
+     },
+
+     #oembed_provider{
+       url_re="^https?://www\\.slideshare\\.net/.+/.+",
+       endpoint_url="http://www.slideshare.net/api/oembed/2",
+       title="Slideshare"
      }
 
     ].
