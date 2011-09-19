@@ -26,6 +26,7 @@
 
 %% interface functions
 -export([
+    init/1,
     observe_rsc_update/3,
     observe_media_viewer/2,
     observe_media_stillimage/2,
@@ -33,12 +34,16 @@
 ]).
 
 -include_lib("zotonic.hrl").
-
-%% Endpoint for embed.ly oembed service
--define(OEMBED_ENDPOINT, "http://api.embed.ly/1/oembed?format=json&maxwidth=500&url=").
+-include_lib("include/oembed.hrl").
 
 %% Fantasy mime type to distinguish embeddable html fragments.
 -define(OEMBED_MIME, <<"text/html-oembed">>).
+
+%% @doc Start the oembed client.
+init(Context) ->
+    oembed_client:start_link(oembed_providers:list(Context)),
+    ok.
+
 
 %% @doc Check if the update contains video embed information.  If so then update the attached medium item.
 %% @spec observe_rsc_update({rsc_update, ResourceId, OldResourceProps}, {Changed, UpdateProps}, Context) -> {NewChanged, NewUpdateProps}
@@ -239,10 +244,7 @@ preview_create(MediaId, MediaProps, Context) ->
 %% @spec oembed_request(string(), #context{}) -> [{Key, Value}]
 oembed_request(Url, Context) ->
     F = fun() ->
-                %% Use embed.ly service...
-                JsonUrl = ?OEMBED_ENDPOINT ++ z_utils:url_encode(Url),
-                {ok, {{_, 200, _}, _Headers, Body}} = http:request(get, {JsonUrl, []}, [], []),
-                z_convert:convert_json(mochijson2:decode(Body))
+                oembed_client:discover(Url)
         end,
     z_depcache:memo(F, {oembed, Url}, 3600, Context).
 
