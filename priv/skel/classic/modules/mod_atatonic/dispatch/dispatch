@@ -1,0 +1,12 @@
+%% Base dispatch rules for zotonic, deleted from mod_base in 0.9dev
+[
+    %% The home page, just shows the "home.tpl" template.
+    {home,     [],            resource_template, [ {template, "home.tpl"} ]},
+
+    %% Normal page to show a resource.
+    {page,    ["page", id],       resource_page, [ {template, {cat, "page.tpl"}} ]},
+    {page,    ["page", id, slug], resource_page, [ {template, {cat, "page.tpl"}} ]},
+
+    % Redirect controller for resource of type 'website'
+    {website,  ["redirect", id, slug],   resource_website_redirect, []}
+].

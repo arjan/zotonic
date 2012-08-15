@@ -29,7 +29,8 @@
 ]).
 
 
-install(blog, Context) ->
+install(Skel, Context) when
+      Skel =:= blog; Skel =:= classic ->
     Now = {{2010,04,03},{9,12,0}},
     Datamodel = 
         #datamodel{
