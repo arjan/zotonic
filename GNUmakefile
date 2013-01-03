@@ -1,54 +1,22 @@
-ERL       ?= erl
-ERLC      ?= $(ERL)c
-APP       := zotonic
-PARSER     =src/erlydtl/erlydtl_parser
+REBAR := $(shell which rebar 2>/dev/null || echo ./rebar)
+REBAR_URL := https://github.com/downloads/basho/rebar/rebar
 
-GIT_CHECK := $(shell test -d .git && git submodule update --init)
-MAKEFILES := $(shell find -L deps modules priv/sites priv/modules priv/extensions priv/sites/*/modules -maxdepth 2 -name Makefile)
+.PHONY: compile test
 
-.PHONY: all
-all: iconv mimetypes makefile-deps $(PARSER).erl erl ebin/$(APP).app 
+all: compile
 
-.PHONY: erl
-erl:
-	@$(ERL) -pa $(wildcard deps/*/ebin) -pa ebin -noinput +B \
-	  -eval 'case make:all() of up_to_date -> halt(0); error -> halt(1) end.'
+compile: $(REBAR)
+	$(REBAR) get-deps compile
 
-$(PARSER).erl: $(PARSER).yrl
-	$(ERLC) -o src/erlydtl $(PARSER).yrl
+test: $(REBAR)
+	$(REBAR) -C rebar.test.config get-dep compile
+	$(REBAR) -C rebar.test.config eunit -v skip_deps=true
 
-iconv:
-	cd deps/iconv && ./rebar compile
+clean:
+	$(REBAR) clean
 
-mimetypes:
-	cd deps/mimetypes && ./rebar compile
-
-makefile-deps:
-	@if [ "${MAKEFILES}" != "" ]; then for f in ${MAKEFILES}; do echo $$f; $(MAKE) -C `dirname $$f`; done; fi
-
-.PHONY: docs edocs
-docs:
-	@echo Building HTML documentation...
-	cd doc && make stubs && make html
-	@echo HTML documentation is now available in doc/_build/html/
-
-edocs:
-	@echo Building reference edoc documentation...
-	bin/zotonic generate-edoc
-
-.PHONY: clean_logs
-clean_logs:
-	@echo "deleting logs:"
-	rm -f erl_crash.dump $(PARSER).erl
-	rm -f priv/log/*
-
-.PHONY: clean
-clean: clean_logs
-	@echo "removing:"
-	(cd deps/iconv; ./rebar clean)
-	(cd deps/mimetypes; ./rebar clean)
-	@if [ "${MAKEFILES}" != "" ]; then for f in ${MAKEFILES}; do echo $$f; $(MAKE) -C `dirname $$f` clean; done; fi
-	rm -f ebin/*.beam ebin/*.app
-
-ebin/$(APP).app:
-	cp src/$(APP).app $@
+./rebar:
+	erl -noshell -s inets start -s ssl start \
+        -eval 'httpc:request(get, {"$(REBAR_URL)", []}, [], [{stream, "./rebar"}])' \
+        -s inets stop -s init stop
+	chmod +x ./rebar

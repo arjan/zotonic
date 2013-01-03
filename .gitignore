@@ -18,20 +18,17 @@ erl_crash.dump
 *.mo
 
 ebin/
-
-/deps/mochiweb/doc/
-/deps/mochiweb/.eunit/
+deps/*
 
 /src/erlydtl/erlydtl_parser.erl
 /src/tests/erlydtl/rendered_output/
 
 /priv/config
 /priv/erlang.config
-/priv/sites/*/config
 
 /priv/log/
 /priv/sasl/
-/priv/sites/default/files/
+/priv/sites/*/config
 /priv/sites/*/files/dropbox/
 /priv/sites/*/files/preview/
 /priv/sites/*/files/processing/
