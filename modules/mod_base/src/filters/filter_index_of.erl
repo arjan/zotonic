@@ -21,7 +21,7 @@
 -module(filter_index_of).
 -author("Arjan Scherpenisse <arjan@scherpenisse.net>").
 
--include_lib("include/zotonic.hrl").
+-include_lib("zotonic.hrl").
 
 -export([index_of/3]).
 

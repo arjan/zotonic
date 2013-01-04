@@ -40,8 +40,8 @@
     finish_request/2
 ]).
 
--include_lib("controller_webmachine_helper.hrl").
--include_lib("zotonic.hrl").
+-include("controller_webmachine_helper.hrl").
+-include("zotonic.hrl").
 
 -record(cache, {path, fullpath, mime, last_modified, body}).
 

@@ -33,8 +33,8 @@
     get_q_all/1
 ]).
 
--include_lib("controller_webmachine_helper.hrl").
--include_lib("zotonic.hrl").
+-include("controller_webmachine_helper.hrl").
+-include("zotonic.hrl").
 
 init(DispatchArgs) -> {ok, DispatchArgs}.
 

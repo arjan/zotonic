@@ -1,0 +1,8 @@
+%% -*- mode: erlang -*-
+{application, mod_base,
+ [{description, "mod_base"},
+  {vsn, "0.10-dev"},
+  {modules, []},
+  {registered, []},
+  {env, []},
+  {applications, [zotonic]}]}.

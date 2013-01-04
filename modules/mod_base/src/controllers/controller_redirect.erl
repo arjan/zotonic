@@ -29,7 +29,7 @@
 ]).
 
 -include_lib("controller_webmachine_helper.hrl").
--include_lib("include/zotonic.hrl").
+-include_lib("zotonic.hrl").
 
 
 init(DispatchArgs) -> {ok, DispatchArgs}.

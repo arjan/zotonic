@@ -1,0 +1,7 @@
+%% Set the include path to the absolute zotonic path so that Zotonic
+%% modules / sites can find the zotonic include files.
+{erl_opts, O} = lists:keyfind(erl_opts, 1, CONFIG),
+{ok, ZotonicDir} = file:get_cwd(),
+IncludePath = filename:join(ZotonicDir, "include"),
+NewO = [{i, IncludePath},{i,ZotonicDir}|O],
+lists:keyreplace(erl_opts, 1, CONFIG, {erl_opts, NewO}).
