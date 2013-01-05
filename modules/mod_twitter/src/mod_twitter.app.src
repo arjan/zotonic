@@ -1,0 +1,7 @@
+{application, mod_twitter,
+ [{description, "The Zotonic module: mod_twitter"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {env, [{zotonic_type, module}]},
+  {applications, [zotonic]}]}.

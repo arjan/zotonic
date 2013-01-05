@@ -1,0 +1,7 @@
+{application, mod_l10n,
+ [{description, "The Zotonic module: mod_l10n"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {env, [{zotonic_type, module}]},
+  {applications, [zotonic]}]}.

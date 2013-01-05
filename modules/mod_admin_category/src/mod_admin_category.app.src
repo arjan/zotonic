@@ -1,0 +1,7 @@
+{application, mod_admin_category,
+ [{description, "The Zotonic module: mod_admin_category"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {env, [{zotonic_type, module}]},
+  {applications, [zotonic]}]}.

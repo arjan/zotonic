@@ -1,0 +1,7 @@
+{application, mod_import_csv,
+ [{description, "The Zotonic module: mod_import_csv"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {env, [{zotonic_type, module}]},
+  {applications, [zotonic]}]}.

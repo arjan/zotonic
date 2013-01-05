@@ -1,0 +1,7 @@
+{application, mod_search,
+ [{description, "The Zotonic module: mod_search"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {env, [{zotonic_type, module}]},
+  {applications, [zotonic]}]}.
