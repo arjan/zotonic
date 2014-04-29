@@ -45,7 +45,6 @@ init(Args) ->
         {ok, Conn} ->
             case pgsql:squery(Conn, "SET search_path TO " ++ Schema) of
                 {ok, [], []} ->
-                    lager:warning("Connection OK! ~p", [Conn]),
                     {ok, #state{conn=Conn}};
                 Error -> 
                     pgsql:close(Conn),

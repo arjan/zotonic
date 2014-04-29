@@ -145,6 +145,7 @@ new(#context{} = C) ->
         dropbox_server=C#context.dropbox_server,
         pivot_server=C#context.pivot_server,
         module_indexer=C#context.module_indexer,
+        db_pool=C#context.db_pool,
         translation_table=C#context.translation_table
     };
 new(undefined) ->

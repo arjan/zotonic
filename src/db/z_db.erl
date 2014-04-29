@@ -21,6 +21,8 @@
 -module(z_db).
 -author("Marc Worrell <marc@worrell.nl").
 
+-define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
+
 -define(PGSQL_TIMEOUT, 5000).
 
 %% interface functions
@@ -164,7 +166,7 @@ get(Key, Props) ->
 
 %% @doc Check if we have database connection
 has_connection(#context{host=Host}) ->
-    is_pid(erlang:whereis(Host)).
+    true. %is_pid(erlang:whereis(Host)).
 
 
 %% @doc Transaction handler safe function for fetching a db connection
@@ -364,7 +366,7 @@ insert(Table, Props, Context) ->
         undefined ->
             InsertProps;
         PropsCol -> 
-            lists:keystore(props, 1, InsertProps, {props, cleanup_props(PropsCol)})
+            lists:keystore(props, 1, InsertProps, {props, encode_props(PropsCol)})
     end,
     
     %% Build the SQL insert statement
@@ -409,7 +411,7 @@ update(Table, Id, Parameters, Context) ->
                     {ok, OldProps} when is_list(OldProps) ->
                         FReplace = fun ({P,_} = T, L) -> lists:keystore(P, 1, L, T) end,
                         NewProps = lists:foldl(FReplace, OldProps, proplists:get_value(props, UpdateProps)),
-                        lists:keystore(props, 1, UpdateProps, {props, cleanup_props(NewProps)});
+                        lists:keystore(props, 1, UpdateProps, {props, encode_props(NewProps)});
                     _ ->
                         UpdateProps
                 end;
@@ -478,6 +480,10 @@ select(Table, Id, Context) ->
     end,
     {ok, Props}.
 
+
+encode_props(Ps) ->
+    B = term_to_binary(cleanup_props(Ps)),
+    <<?TERM_MAGIC_NUMBER, B/binary>>.
 
 %% @doc Remove all undefined props, translate texts to binaries.
 cleanup_props(Ps) when is_list(Ps) ->
@@ -683,7 +689,7 @@ assert_table_name1([H|T]) when (H >= $a andalso H =< $z) orelse (H >= $0 andalso
 
 %% @doc Merge the contents of the props column into the result rows
 %% @spec merge_props(list()) -> list()
-merge_props(undefined) ->
+merge_props(null) ->
     undefined;
 merge_props(List) ->
     merge_props(List, []).
@@ -692,22 +698,26 @@ merge_props([], Acc) ->
     lists:reverse(Acc);
 merge_props([R|Rest], Acc) ->
     case proplists:get_value(props, R) of
-        undefined ->
+        null ->
             merge_props(Rest, [R|Acc]);
         <<>> ->
             merge_props(Rest, [R|Acc]);
-        List ->
-            merge_props(Rest, [lists:keydelete(props, 1, R)++List|Acc])
+        <<?TERM_MAGIC_NUMBER, PropsBin/binary>> ->
+            merge_props(Rest, [lists:keydelete(props, 1, R)++binary_to_term(PropsBin)|Acc])
     end.
 
 
 assoc1(C, Sql, Parameters, Timeout) ->
-    lager:warning("assoc1: ~p", [Sql]),
     case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
         {ok, Columns, Rows} ->
             Names = [ list_to_atom(binary_to_list(Name)) || #column{name=Name} <- Columns ],
             Rows1 = [ lists:zip(Names, tuple_to_list(Row)) || Row <- Rows ],
-            {ok, Rows1};
+            Rows2 = case proplists:lookup(props, Rows1) of
+                        {props, PropsBin} when is_binary(PropsBin) -> 
+                            z_utils:prop_replace(props, binary_to_term(PropsBin), Rows1);
+                        _ -> Rows1
+                    end,
+            {ok, Rows2};
         Other -> Other
     end.
 
