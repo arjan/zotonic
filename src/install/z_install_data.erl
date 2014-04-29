@@ -41,21 +41,14 @@ install(Host, C) ->
     ?DEBUG({Host, "Install done."}),
     ok.
 
-install_modules(Context = #context{}) ->
-    case pgsql_pool:get_connection(Context#context.host) of
-        {ok, C} ->
-            install_modules(Context#context.host, C);
-        {error, noproc} ->
-            ok
-    end.
-
 %% @doc Install all modules for the site.
 %% The list of modules is read from either the site config file, 
 %% under the key <tt>install_modules</tt>, or if that key is not found
 %% in the site config file, a list of modules is installed based
 %% on the skeleton used to create the site.
--spec install_modules(Host::atom(), Connection::any()) -> ok.
-install_modules(Host, C) ->
+-spec install_modules(#context{}) -> ok.
+install_modules(Context) ->
+    Host = Context#context.host,
     Config = z_sites_manager:get_site_config(Host),
     Modules = [Host
                |proplists:get_value(
@@ -65,17 +58,17 @@ install_modules(Host, C) ->
                     proplists:get_value(skeleton, Config))
                  )
               ],
-    [install_module(M, C) || M <- Modules],
+    [install_module(M, Context) || M <- Modules],
     ok.
 
 install_module({skeleton, S}, C) ->
     [install_module(M, C) || M <- get_skeleton_modules(S)];
-install_module(M, C) ->
-    case catch pgsql:equery(C, "insert into module (name, is_active) values ($1, true)", [M]) of
-        {ok, 1}=R ->
+install_module(M, Context) ->
+    case catch z_db:equery("insert into module (name, is_active) values ($1, true)", [M], Context) of
+        {ok, 1} = R ->
             R;
         _ ->
-            {ok, 1} = pgsql:equery(C, "update module set is_active = true where name = $1", [M])
+            {ok, 1} = z_db:equery("update module set is_active = true where name = $1", [M], Context)
     end.
 
 -spec get_skeleton_modules(Skeleton::atom()) -> list().
@@ -140,24 +133,24 @@ install_category(C) ->
     %% The egg has to lay a fk-checked chicken here, so the insertion order is sensitive.
 
     %% 1. Insert the category "category" and "meta"
-    {ok, 1} = pgsql:equery(C, "insert into category (id, parent_id, seq) values (116, null, 1)"),
-    {ok, 1} = pgsql:equery(C, "insert into category (id, parent_id, seq) values (115, null, 99)"),
-    {ok, 1} = pgsql:equery(C, "update category set parent_id = 115 where id = 116"),
+    {ok, 1} = z_db:equery("insert into category (id, parent_id, seq) values (116, null, 1)", C),
+    {ok, 1} = z_db:equery("insert into category (id, parent_id, seq) values (115, null, 99)", C),
+    {ok, 1} = z_db:equery("update category set parent_id = 115 where id = 116", C),
 
     %% "http://purl.org/dc/terms/DCMIType" ?
-    {ok, 1} = pgsql:equery(C, "
+    {ok, 1} = z_db:equery("
             insert into rsc (id, is_protected, visible_for, category_id, name, uri, props)
             values (116, true, 0, 116, 'category', $1, $2)
             ", [    undefined, 
                     [{title, {trans, [{en, <<"Category">>}, {nl, <<"Categorie">>}]}}] 
-                ]),
+                ], C),
 
-    {ok, 1} = pgsql:equery(C, "
+    {ok, 1} = z_db:equery("
             insert into rsc (id, is_protected, visible_for, category_id, name, uri, props)
             values (115, true, 0, 116, 'meta', $1, $2)
             ", [    undefined, 
                     [{title, {trans, [{en, <<"Meta">>}, {nl, <<"Meta">>}]}}] 
-                ]),
+                ], C),
     
     %% Now that we have the category "category" we can insert all other categories.
     Cats = [
@@ -198,16 +191,16 @@ install_category(C) ->
     ],
 
     InsertCat = fun({Id, ParentId, Seq, Name, Protected, Uri, Props}) ->
-        {ok, 1} = pgsql:equery(C, "
+        {ok, 1} = z_db:equery("
                 insert into rsc (id, visible_for, category_id, is_protected, name, uri, props)
                 values ($1, 0, 116, $2, $3, $4, $5)
-                ", [ Id, Protected, Name, Uri, Props ]),
-        {ok, 1} = pgsql:equery(C, "
+                ", [ Id, Protected, Name, Uri, Props ], C),
+        {ok, 1} = z_db:equery("
                 insert into category (id, parent_id, seq)
-                values ($1, $2, $3)", [Id, ParentId, Seq])
+                values ($1, $2, $3)", [Id, ParentId, Seq], C)
     end,
     [ InsertCat(R) || R <- Cats ],
-    pgsql:reset_id(C, "rsc"),
+%    pgsql:reset_id(C, "rsc"),
     ok = enumerate_categories(C),
     ok.
     
@@ -221,12 +214,12 @@ install_rsc(C) ->
         [   1,  0,  102,  true,    "administrator",   [{title,<<"Site Administrator">>}] ]
     ],
     
-    [ {ok,1} = pgsql:equery(C, "
+    [ {ok,1} = z_db:equery("
             insert into rsc (id, visible_for, category_id, is_protected, name, props)
             values ($1, $2, $3, $4, $5, $6)
-            ", R) || R <- Rsc ],
-    {ok, _} = pgsql:squery(C, "update rsc set creator_id = 1, modifier_id = 1, is_published = true"),
-    pgsql:reset_id(C, "rsc"),
+            ", R, C) || R <- Rsc ],
+    {ok, _} = z_db:equery("update rsc set creator_id = 1, modifier_id = 1, is_published = true", C),
+%    pgsql:reset_id(C, "rsc"),
     ok.
 
 
@@ -234,9 +227,9 @@ install_rsc(C) ->
 install_identity(C) ->
     ?DEBUG("Inserting username for the admin"),
     Hash = m_identity:hash([]),
-    {ok, 1} = pgsql:equery(C, "
+    {ok, 1} = z_db:equery("
         insert into identity (rsc_id, type, key, is_unique, propb)
-        values (1, 'username_pw', 'admin', true, $1)", [Hash]),
+        values (1, 'username_pw', 'admin', true, $1)", [Hash], C),
     ok.
     
 
@@ -256,13 +249,13 @@ install_predicate(C) ->
 		[ 310, true,   "haspart",  "http://purl.org/dc/terms/hasPart",					[{reversed, false},{title, {trans, [{en,"Contains"}, {nl,"Bevat"}]}}]]
     ],
 
-    {ok, CatId}   = pgsql:squery1(C, "select id from rsc where name = 'predicate'"),
+    {ok, CatId}   = z_db:squery1("select id from rsc where name = 'predicate'", C),
     
-    [ {ok,1} = pgsql:equery(C, "
+    [ {ok,1} = z_db:equery("
             insert into rsc (id, visible_for, is_protected, name, uri, props, category_id, is_published, creator_id, modifier_id)
             values ($1, 0, $2, $3, $4, $5, $6, true, 1, 1)
-            ", R ++ [CatId]) || R <- Preds],
-    pgsql:reset_id(C, "rsc"),
+            ", R ++ [CatId], C) || R <- Preds],
+%    pgsql:reset_id(C, "rsc"),
 
     ObjSubj = [
         {300, true,  104}, %  text   -> about     -> _
@@ -287,9 +280,9 @@ install_predicate(C) ->
         {310, true,  120}  %  collection -> haspart -> _
     ],
     
-    [ {ok, 1} = pgsql:equery(C, "
+    [ {ok, 1} = z_db:equery("
             insert into predicate_category (predicate_id, is_subject, category_id) 
-            values ($1, $2, $3)", OS) || OS <- ObjSubj ],
+            values ($1, $2, $3)", OS, C) || OS <- ObjSubj ],
     ok.
 
 
@@ -297,10 +290,10 @@ install_predicate(C) ->
 %% @spec enumerate_categories(Connection) -> ok
 enumerate_categories(C) ->
     ?DEBUG("Sorting the category hierarchy"),
-    {ok, _, CatTuples} = pgsql:equery(C, "select id, parent_id, seq from category order by seq, id"),
+    {ok, _, CatTuples} = z_db:equery("select id, parent_id, seq from category order by seq, id", C),
     Enums = m_category:enumerate(CatTuples),
     [
-        {ok, _} = pgsql:equery(C, "update category set nr = $2, lvl = $3, lft = $4, rght = $5, props = $6 where id = $1", [CatId, Nr, Level, Left, Right, [{path,Path}]])
+        {ok, _} = z_db:equery("update category set nr = $2, lvl = $3, lft = $4, rght = $5, props = $6 where id = $1", [CatId, Nr, Level, Left, Right, [{path,Path}]], C)
         || {CatId, Nr, Level, Left, Right, Path} <- Enums
     ],
     ok.

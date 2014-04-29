@@ -36,6 +36,8 @@ start_link(SiteProps) when is_list(SiteProps) ->
     install_check(SiteProps),
     ignore.
 
+install_check(_) ->
+    ok;
 install_check(SiteProps) ->
     %% Check if the config table exists, if so then assume that all is ok
     Name     = proplists:get_value(host, SiteProps),

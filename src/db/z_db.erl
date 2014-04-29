@@ -21,6 +21,8 @@
 -module(z_db).
 -author("Marc Worrell <marc@worrell.nl").
 
+-define(PGSQL_TIMEOUT, 5000).
+
 %% interface functions
 -export([
     has_connection/1,
@@ -68,8 +70,8 @@
 ]).
 
 
--include_lib("pgsql.hrl").
 -include_lib("zotonic.hrl").
+-include_lib("deps/epgsql/include/pgsql.hrl").
 
 -compile([{parse_transform, lager_transform}]).
 
@@ -117,26 +119,25 @@ transaction(Function, Options, Context) ->
 transaction1(Function, #context{dbc=undefined} = Context) ->
     case has_connection(Context) of
         true ->
-            Host     = Context#context.host,
-            {ok, C}  = pgsql_pool:get_connection(Host),
+            C = get_connection(Context),
             Context1 = Context#context{dbc=C},
             Result = try
-                        case pgsql:squery(C, "BEGIN") of
+                        case z_db_pgsql:squery(C, "BEGIN") of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorBegin -> throw(ErrorBegin)
                         end,
                         R = Function(Context1),
-                        case pgsql:squery(C, "COMMIT") of
+                        case z_db_pgsql:squery(C, "COMMIT") of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorCommit -> throw(ErrorCommit)
                         end,
                         R
                      catch
                         _:Why ->
-                            pgsql:squery(C, "ROLLBACK"),
+                            z_db_pgsql:squery(C, "ROLLBACK"),
                             {rollback, {Why, erlang:get_stacktrace()}}
                      end,
-            pgsql_pool:return_connection(Host, C),
+            return_connection(Context, C),
             Result;
         false ->
             {rollback, {no_database_connection, erlang:get_stacktrace()}}
@@ -167,20 +168,19 @@ has_connection(#context{host=Host}) ->
 
 
 %% @doc Transaction handler safe function for fetching a db connection
-get_connection(#context{dbc=undefined, host=Host} = Context) ->
-    case has_connection(Context) of
-        true ->
-            {ok, C} = pgsql_pool:get_connection(Host),
-            C;
-        false ->
-            none
-    end;
+get_connection(#context{dbc=undefined} = Context) ->
+%    case has_connection(Context) of
+%        true ->
+            z_db_pool:get_connection(Context);
+%        false ->
+%            none
+%    end;
 get_connection(Context) ->
     Context#context.dbc.
 
 %% @doc Transaction handler safe function for releasing a db connection
-return_connection(C, #context{dbc=undefined, host=Host}) ->
-    pgsql_pool:return_connection(Host, C);
+return_connection(C, Context=#context{dbc=undefined}) ->
+    z_db_pool:return_connection(C, Context);
 return_connection(_C, _Context) -> 
     ok.
 
@@ -222,11 +222,12 @@ assoc_props_row(Sql, Parameters, Context) ->
     
 
 get_parameter(Parameter, Context) ->
-    F = fun(C) ->
-		{ok, Result} = pgsql:get_parameter(C, z_convert:to_binary(Parameter)),
-		Result
-	end,
-    with_connection(F, Context).
+    with_connection(
+      fun(C) ->
+              {ok, Result} = z_db_pgsql:get_parameter(C, z_convert:to_binary(Parameter)),
+              Result
+      end,
+      Context).
     
 
 %% @doc Return property lists of the results of a query on the database in the Context
@@ -242,7 +243,7 @@ assoc(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 assoc(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                {ok, Result} = pgsql:assoc(C, Sql, Parameters, Timeout),
+                {ok, Result} = assoc1(C, Sql, Parameters, Timeout),
                 Result
 	end,
     with_connection(F, Context).
@@ -259,7 +260,7 @@ assoc_props(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 assoc_props(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                {ok, Result} = pgsql:assoc(C, Sql, Parameters, Timeout),
+                {ok, Result} = assoc1(C, Sql, Parameters, Timeout),
                 merge_props(Result)
 	end,
     with_connection(F, Context).
@@ -276,7 +277,7 @@ q(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 q(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                case pgsql:equery(C, Sql, Parameters, Timeout) of
+                case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
                     {ok, _Affected, _Cols, Rows} -> Rows;
                     {ok, _Cols, Rows} -> Rows;
                     {ok, Rows} -> Rows;
@@ -298,7 +299,7 @@ q1(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 q1(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> undefined;
            (C) ->
-                case pgsql:equery1(C, Sql, Parameters, Timeout) of
+                case equery1(C, Sql, Parameters, Timeout) of
                     {ok, Value} -> Value;
                     {error, noresult} -> undefined;
                     {error, Reason} = Error ->
@@ -329,7 +330,7 @@ equery(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 
 equery(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> {error, noresult};
-           (C) -> pgsql:equery(C, Sql, Parameters, Timeout)
+           (C) -> z_db_pgsql:equery(C, Sql, Parameters, Timeout)
         end,
     with_connection(F, Context).
 
@@ -340,10 +341,11 @@ insert(Table, Context) when is_atom(Table) ->
     insert(atom_to_list(Table), Context);
 insert(Table, Context) ->
     assert_table_name(Table),
-    F = fun(C) ->
-		pgsql:equery1(C, "insert into \""++Table++"\" default values returning id")
-	end,
-    with_connection(F, Context).
+    with_connection(
+      fun(C) ->
+              equery1(C, "insert into \""++Table++"\" default values returning id")
+      end,
+      Context).
 
 
 %% @doc Insert a row, setting the fields to the props.  Unknown columns are serialized in the props column.
@@ -379,7 +381,7 @@ insert(Table, Props, Context) ->
     end,
 
     F = fun(C) ->
-		Id = case pgsql:equery1(C, FinalSql, Parameters) of
+		Id = case equery1(C, FinalSql, Parameters) of
 			 {ok, IdVal} -> IdVal;
 			 {error, noresult} -> undefined;
              {error, Reason} = Error ->
@@ -403,7 +405,7 @@ update(Table, Id, Parameters, Context) ->
         UpdateProps1 = case proplists:is_defined(props, UpdateProps) of
             true ->
                 % Merge the new props with the props in the database
-                case pgsql:equery1(C, "select props from \""++Table++"\" where id = $1", [Id]) of
+                case equery1(C, "select props from \""++Table++"\" where id = $1", [Id]) of
                     {ok, OldProps} when is_list(OldProps) ->
                         FReplace = fun ({P,_} = T, L) -> lists:keystore(P, 1, L, T) end,
                         NewProps = lists:foldl(FReplace, OldProps, proplists:get_value(props, UpdateProps)),
@@ -421,7 +423,7 @@ update(Table, Id, Parameters, Context) ->
         Sql = "update \""++Table++"\" set " 
                  ++ string:join([ "\"" ++ atom_to_list(ColName) ++ "\" = $" ++ integer_to_list(Nr) || {ColName, Nr} <- ColNamesNr ], ", ")
                  ++ " where id = $1",
-        case pgsql:equery1(C, Sql, [Id | Params]) of
+        case equery1(C, Sql, [Id | Params]) of
             {ok, _RowsUpdated} = Ok -> Ok;
             {error, Reason} = Error ->
                 lager:error("z_db error ~p in query ~p with ~p", [Reason, Sql, [Id | Params]]),
@@ -439,7 +441,7 @@ delete(Table, Id, Context) ->
     assert_table_name(Table),
     F = fun(C) ->
         Sql = "delete from \""++Table++"\" where id = $1", 
-        case pgsql:equery1(C, Sql, [Id]) of
+        case equery1(C, Sql, [Id]) of
             {ok, _RowsDeleted} = Ok -> Ok;
             {error, Reason} = Error ->
                 lager:error("z_db error ~p in query ~p with ~p", [Reason, Sql, [Id]]),
@@ -459,7 +461,7 @@ select(Table, Id, Context) ->
     assert_table_name(Table),
     F = fun(C) ->
 		Sql = "select * from \""++Table++"\" where id = $1 limit 1", 
-		pgsql:assoc(C, Sql, [Id])
+		assoc1(C, Sql, [Id], ?PGSQL_TIMEOUT)
 	end,
     {ok, Row} = with_connection(F, Context),
     
@@ -529,8 +531,9 @@ split_props(Props, Cols) ->
 columns(Table, Context) when is_atom(Table) ->
     columns(atom_to_list(Table), Context);
 columns(Table, Context) ->
-    {ok, Db} = pgsql_pool:get_database(?HOST(Context)),
-    {ok, Schema} = pgsql_pool:get_database_opt(schema, ?HOST(Context)),
+    Options = z_db_pool:get_database_options(Context),
+    Db = proplists:get_value(dbdatabase, Options),
+    Schema = proplists:get_value(dbschema, Options),
     case z_depcache:get({columns, Db, Schema, Table}, Context) of
         {ok, Cols} -> 
             Cols;
@@ -547,7 +550,7 @@ columns(Table, Context) ->
     end.
     
 
-    columns1({<<"id">>, <<"integer">>, undefined, Nullable, <<"nextval(", _/binary>>}) ->
+    columns1({<<"id">>, <<"integer">>, null, Nullable, <<"nextval(", _/binary>>}) ->
         #column_def{
             name = id,
             type = "serial",
@@ -565,6 +568,7 @@ columns(Table, Context) ->
         }.
     
     column_default(undefined) -> undefined;
+    column_default(null) -> undefined;
     column_default(<<"nextval(", _/binary>>) -> undefined;
     column_default(Default) -> binary_to_list(Default).
 
@@ -578,7 +582,8 @@ column_names(Table, Context) ->
 
 %% @doc Flush all cached information about the database.
 flush(Context) ->
-    {ok, Db} = pgsql_pool:get_database(?HOST(Context)),
+    Options = z_db_pool:get_database_options(Context),
+    Db = proplists:get_value(dbdatabase, Options),
     z_depcache:flush({database, Db}, Context).
 
 
@@ -593,7 +598,7 @@ update_sequence(Table, Ids, Context) ->
     F = fun(C) when C =:= none -> 
 		[];
 	   (C) -> 
-		[ {ok, _} = pgsql:equery1(C, "update \""++Table++"\" set seq = $2 where id = $1", Arg) || Arg <- Args ]
+		[ {ok, _} = equery1(C, "update \""++Table++"\" set seq = $2 where id = $1", Arg) || Arg <- Args ]
 	   end,
     with_connection(F, Context).
 
@@ -602,8 +607,9 @@ update_sequence(Table, Ids, Context) ->
 %% @doc Check the information schema if a certain table exists in the context database.
 %% @spec table_exists(TableName, Context) -> bool()
 table_exists(Table, Context) ->
-    {ok, Db} = pgsql_pool:get_database(?HOST(Context)),
-    {ok, Schema} = pgsql_pool:get_database_opt(schema, ?HOST(Context)),
+    Options = z_db_pool:get_database_options(Context),
+    Db = proplists:get_value(dbdatabase, Options),
+    Schema = proplists:get_value(dbschema, Options),
     case q1("   select count(*) 
                 from information_schema.tables 
                 where table_catalog = $1 
@@ -692,4 +698,33 @@ merge_props([R|Rest], Acc) ->
             merge_props(Rest, [R|Acc]);
         List ->
             merge_props(Rest, [lists:keydelete(props, 1, R)++List|Acc])
+    end.
+
+
+assoc1(C, Sql, Parameters, Timeout) ->
+    lager:warning("assoc1: ~p", [Sql]),
+    case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
+        {ok, Columns, Rows} ->
+            Names = [ list_to_atom(binary_to_list(Name)) || #column{name=Name} <- Columns ],
+            Rows1 = [ lists:zip(Names, tuple_to_list(Row)) || Row <- Rows ],
+            {ok, Rows1};
+        Other -> Other
+    end.
+
+
+equery1(C, Sql) ->
+    equery1(C, Sql, [], ?PGSQL_TIMEOUT).
+
+equery1(C, Sql, Parameters) when is_list(Parameters); is_tuple(Parameters) ->
+    equery1(C, Sql, Parameters, ?PGSQL_TIMEOUT);
+equery1(C, Sql, Timeout) when is_integer(Timeout) ->
+    equery1(C, Sql, [], Timeout).
+
+equery1(C, Sql, Parameters, Timeout) ->
+    case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
+        {ok, _Columns, []} -> {error, noresult};
+        {ok, _RowCount, _Columns, []} -> {error, noresult};
+        {ok, _Columns, [Row|_]} -> {ok, element(1, Row)};
+        {ok, _RowCount, _Columns, [Row|_]} -> {ok, element(1, Row)};
+        Other -> Other
     end.

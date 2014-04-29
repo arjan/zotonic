@@ -53,9 +53,12 @@
         pivot_server,
         module_indexer,
         translation_table,
-        
+
         %% The database connection used for (nested) transactions, see z_db
         dbc=undefined :: pid() | undefined,
+
+        %% The pid of the database pool of this site
+        db_pool :: pid() | undefined,
 
         %% The language selected, used by z_trans and others
         language=en :: atom(),
