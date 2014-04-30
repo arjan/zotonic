@@ -145,7 +145,7 @@ new(#context{} = C) ->
         dropbox_server=C#context.dropbox_server,
         pivot_server=C#context.pivot_server,
         module_indexer=C#context.module_indexer,
-        db_pool=C#context.db_pool,
+        db=C#context.db,
         translation_table=C#context.translation_table
     };
 new(undefined) ->
@@ -198,8 +198,9 @@ set_dispatch_from_path(Context) ->
 %% @spec set_server_names(Context1) -> Context2
 set_server_names(#context{host=Host} = Context) ->
     HostAsList = [$$ | atom_to_list(Host)],
+    Depcache = list_to_atom("z_depcache"++HostAsList),
     Context#context{
-        depcache=list_to_atom("z_depcache"++HostAsList),
+        depcache=Depcache,
         notifier=list_to_atom("z_notifier"++HostAsList),
         session_manager=list_to_atom("z_session_manager"++HostAsList),
         dispatcher=list_to_atom("z_dispatcher"++HostAsList),
@@ -208,7 +209,7 @@ set_server_names(#context{host=Host} = Context) ->
         dropbox_server=list_to_atom("z_dropbox"++HostAsList),
         pivot_server=list_to_atom("z_pivot_rsc"++HostAsList),
         module_indexer=list_to_atom("z_module_indexer"++HostAsList),
-        db_pool=z_db_pool:pool_name(Host),
+        db={z_db_pool:db_pool_name(Host), z_db_pool:db_driver(Context#context{depcache=Depcache})},
         translation_table=z_trans_server:table(Host)
     }.
 

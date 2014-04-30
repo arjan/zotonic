@@ -17,21 +17,33 @@
 %% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
+
 -module(z_db_pool).
 
 -include_lib("zotonic.hrl").
+-define(DEFAULT_DB_DRIVER, z_db_pgsql).
 
 -export([
          child_spec/2,
          get_database_options/1,
-         pool_name/1,
+         db_pool_name/1,
+         db_driver/1,
          get_connection/1,
          return_connection/2
         ]).
 
 
-pool_name(Host) ->
+db_pool_name(Host) ->
     list_to_atom("z_db_pool" ++ [$$ | atom_to_list(Host)]).
+
+db_driver(SiteProps) when is_list(SiteProps) ->
+    proplists:get_value(dbdriver, SiteProps, ?DEFAULT_DB_DRIVER);
+db_driver(Context=#context{}) ->
+    case m_site:get(dbdriver, Context) of
+        undefined -> ?DEFAULT_DB_DRIVER;
+        Driver -> Driver
+    end.
+
 
 get_database_options(Context) ->
     z_depcache:memo(
@@ -52,12 +64,13 @@ child_spec(Host, SiteProps) ->
             PoolSize    = proplists:get_value(dbpool_size,     SiteProps, 5),
             PoolMax     = proplists:get_value(dbpool_max_overflow,     SiteProps, 20),
 
-            Name = pool_name(Host),
+            Name = db_pool_name(Host),
 
+            WorkerModule = db_driver(SiteProps),
             WorkerArgs = db_opts(SiteProps),
             
             PoolArgs = [{name, {local, Name}},
-                        {worker_module, z_db_pgsql},
+                        {worker_module, WorkerModule},
                         {size, PoolSize},
                         {max_overflow, PoolMax}],
             [poolboy:child_spec(Name, PoolArgs, WorkerArgs)]
@@ -67,8 +80,8 @@ db_opts(SiteProps) ->
     [{K, proplists:get_value(K, SiteProps, z_config:get(K))}
      || K <- [dbhost, dbport, dbuser, dbpassword, dbdatabase, dbschema]].
 
-get_connection(#context{db_pool=Pool}) ->
+get_connection(#context{db={Pool,_}}) ->
     poolboy:checkout(Pool).
 
-return_connection(Worker, #context{db_pool=Pool}) ->
+return_connection(Worker, #context{db={Pool,_}}) ->
     poolboy:checkin(Pool, Worker).

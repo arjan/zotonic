@@ -57,8 +57,8 @@
         %% The database connection used for (nested) transactions, see z_db
         dbc=undefined :: pid() | undefined,
 
-        %% The pid of the database pool of this site
-        db_pool :: pid() | undefined,
+        %% The pid of the database pool of this site and the db driver in use (usually z_db_pgsql)
+        db=undefined :: {pid(), atom()} | undefined,
 
         %% The language selected, used by z_trans and others
         language=en :: atom(),

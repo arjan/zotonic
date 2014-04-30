@@ -23,7 +23,7 @@
 
 -define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
 
--define(PGSQL_TIMEOUT, 5000).
+-define(TIMEOUT, 5000).
 
 %% interface functions
 -export([
@@ -121,22 +121,23 @@ transaction(Function, Options, Context) ->
 transaction1(Function, #context{dbc=undefined} = Context) ->
     case has_connection(Context) of
         true ->
+            {_, DbDriver} = Context#context.db,
             C = get_connection(Context),
             Context1 = Context#context{dbc=C},
             Result = try
-                        case z_db_pgsql:squery(C, "BEGIN") of
+                        case DbDriver:squery(C, "BEGIN") of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorBegin -> throw(ErrorBegin)
                         end,
                         R = Function(Context1),
-                        case z_db_pgsql:squery(C, "COMMIT") of
+                        case DbDriver:squery(C, "COMMIT") of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorCommit -> throw(ErrorCommit)
                         end,
                         R
                      catch
                         _:Why ->
-                            z_db_pgsql:squery(C, "ROLLBACK"),
+                            DbDriver:squery(C, "ROLLBACK"),
                             {rollback, {Why, erlang:get_stacktrace()}}
                      end,
             return_connection(Context, C),
@@ -226,7 +227,8 @@ assoc_props_row(Sql, Parameters, Context) ->
 get_parameter(Parameter, Context) ->
     with_connection(
       fun(C) ->
-              {ok, Result} = z_db_pgsql:get_parameter(C, z_convert:to_binary(Parameter)),
+              {_, DbDriver} = Context#context.db,
+              {ok, Result} = DbDriver:get_parameter(C, z_convert:to_binary(Parameter)),
               Result
       end,
       Context).
@@ -238,14 +240,15 @@ assoc(Sql, Context) ->
     assoc(Sql, [], Context).
 
 assoc(Sql, Parameters, #context{} = Context) ->
-    assoc(Sql, Parameters, Context, ?PGSQL_TIMEOUT);
+    assoc(Sql, Parameters, Context, ?TIMEOUT);
 assoc(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     assoc(Sql, [], Context, Timeout).
 
 assoc(Sql, Parameters, Context, Timeout) ->
+    {_, DbDriver} = Context#context.db,
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                {ok, Result} = assoc1(C, Sql, Parameters, Timeout),
+                {ok, Result} = assoc1(DbDriver, C, Sql, Parameters, Timeout),
                 Result
 	end,
     with_connection(F, Context).
@@ -255,31 +258,33 @@ assoc_props(Sql, Context) ->
     assoc_props(Sql, [], Context).
 
 assoc_props(Sql, Parameters, #context{} = Context) ->
-    assoc_props(Sql, Parameters, Context, ?PGSQL_TIMEOUT);
+    assoc_props(Sql, Parameters, Context, ?TIMEOUT);
 assoc_props(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     assoc_props(Sql, [], Context, Timeout).
 
 assoc_props(Sql, Parameters, Context, Timeout) ->
+    {_, DbDriver} = Context#context.db,
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                {ok, Result} = assoc1(C, Sql, Parameters, Timeout),
+                {ok, Result} = assoc1(DbDriver, C, Sql, Parameters, Timeout),
                 merge_props(Result)
 	end,
     with_connection(F, Context).
 
 
 q(Sql, Context) ->
-    q(Sql, [], Context, ?PGSQL_TIMEOUT).
+    q(Sql, [], Context, ?TIMEOUT).
 
 q(Sql, Parameters, #context{} = Context) ->
-    q(Sql, Parameters, Context, ?PGSQL_TIMEOUT);
+    q(Sql, Parameters, Context, ?TIMEOUT);
 q(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     q(Sql, [], Context, Timeout).
 
 q(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
+                {_, DbDriver} = Context#context.db,
+                case DbDriver:equery(C, Sql, Parameters, Timeout) of
                     {ok, _Affected, _Cols, Rows} -> Rows;
                     {ok, _Cols, Rows} -> Rows;
                     {ok, Rows} -> Rows;
@@ -294,14 +299,15 @@ q1(Sql, Context) ->
     q1(Sql, [], Context).
 
 q1(Sql, Parameters, #context{} = Context) ->
-    q1(Sql, Parameters, Context, ?PGSQL_TIMEOUT);
+    q1(Sql, Parameters, Context, ?TIMEOUT);
 q1(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     q1(Sql, [], Context, Timeout).
 
 q1(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> undefined;
            (C) ->
-                case equery1(C, Sql, Parameters, Timeout) of
+                {_, DbDriver} = Context#context.db,
+                case equery1(DbDriver, C, Sql, Parameters, Timeout) of
                     {ok, Value} -> Value;
                     {error, noresult} -> undefined;
                     {error, Reason} = Error ->
@@ -326,13 +332,15 @@ equery(Sql, Context) ->
     equery(Sql, [], Context).
     
 equery(Sql, Parameters, #context{} = Context) ->
-    equery(Sql, Parameters, Context, ?PGSQL_TIMEOUT);
+    equery(Sql, Parameters, Context, ?TIMEOUT);
 equery(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     equery(Sql, [], Context, Timeout).
 
 equery(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> {error, noresult};
-           (C) -> z_db_pgsql:equery(C, Sql, Parameters, Timeout)
+           (C) ->
+                {_, DbDriver} = Context#context.db,
+                DbDriver:equery(C, Sql, Parameters, Timeout)
         end,
     with_connection(F, Context).
 
@@ -345,7 +353,8 @@ insert(Table, Context) ->
     assert_table_name(Table),
     with_connection(
       fun(C) ->
-              equery1(C, "insert into \""++Table++"\" default values returning id")
+              {_, DbDriver} = Context#context.db,
+              equery1(DbDriver, C, "insert into \""++Table++"\" default values returning id")
       end,
       Context).
 
@@ -382,8 +391,10 @@ insert(Table, Props, Context) ->
         false -> Sql
     end,
 
-    F = fun(C) ->
-		Id = case equery1(C, FinalSql, Parameters) of
+    F =
+        fun(C) ->
+             {_, DbDriver} = Context#context.db,
+             Id = case equery1(DbDriver, C, FinalSql, Parameters) of
 			 {ok, IdVal} -> IdVal;
 			 {error, noresult} -> undefined;
              {error, Reason} = Error ->
@@ -401,14 +412,16 @@ update(Table, Id, Parameters, Context) when is_atom(Table) ->
     update(atom_to_list(Table), Id, Parameters, Context);
 update(Table, Id, Parameters, Context) ->
     assert_table_name(Table),
+    {_, DbDriver} = Context#context.db,
     Cols         = column_names(Table, Context),
     UpdateProps  = prepare_cols(Cols, Parameters),
     F = fun(C) ->
         UpdateProps1 = case proplists:is_defined(props, UpdateProps) of
             true ->
                 % Merge the new props with the props in the database
-                case equery1(C, "select props from \""++Table++"\" where id = $1", [Id]) of
-                    {ok, OldProps} when is_list(OldProps) ->
+                case equery1(DbDriver, C, "select props from \""++Table++"\" where id = $1", [Id]) of
+                    {ok, <<?TERM_MAGIC_NUMBER, OldPropsBin/binary>>} ->
+                        OldProps = binary_to_term(OldPropsBin),
                         FReplace = fun ({P,_} = T, L) -> lists:keystore(P, 1, L, T) end,
                         NewProps = lists:foldl(FReplace, OldProps, proplists:get_value(props, UpdateProps)),
                         lists:keystore(props, 1, UpdateProps, {props, encode_props(NewProps)});
@@ -425,7 +438,7 @@ update(Table, Id, Parameters, Context) ->
         Sql = "update \""++Table++"\" set " 
                  ++ string:join([ "\"" ++ atom_to_list(ColName) ++ "\" = $" ++ integer_to_list(Nr) || {ColName, Nr} <- ColNamesNr ], ", ")
                  ++ " where id = $1",
-        case equery1(C, Sql, [Id | Params]) of
+        case equery1(DbDriver, C, Sql, [Id | Params]) of
             {ok, _RowsUpdated} = Ok -> Ok;
             {error, Reason} = Error ->
                 lager:error("z_db error ~p in query ~p with ~p", [Reason, Sql, [Id | Params]]),
@@ -441,9 +454,10 @@ delete(Table, Id, Context) when is_atom(Table) ->
     delete(atom_to_list(Table), Id, Context);
 delete(Table, Id, Context) ->
     assert_table_name(Table),
+    {_, DbDriver} = Context#context.db,
     F = fun(C) ->
         Sql = "delete from \""++Table++"\" where id = $1", 
-        case equery1(C, Sql, [Id]) of
+        case equery1(DbDriver, C, Sql, [Id]) of
             {ok, _RowsDeleted} = Ok -> Ok;
             {error, Reason} = Error ->
                 lager:error("z_db error ~p in query ~p with ~p", [Reason, Sql, [Id]]),
@@ -461,9 +475,10 @@ select(Table, Id, Context) when is_atom(Table) ->
     select(atom_to_list(Table), Id, Context);
 select(Table, Id, Context) ->
     assert_table_name(Table),
+    {_, DbDriver} = Context#context.db,
     F = fun(C) ->
 		Sql = "select * from \""++Table++"\" where id = $1 limit 1", 
-		assoc1(C, Sql, [Id], ?PGSQL_TIMEOUT)
+		assoc1(DbDriver, C, Sql, [Id], ?TIMEOUT)
 	end,
     {ok, Row} = with_connection(F, Context),
     
@@ -573,9 +588,8 @@ columns(Table, Context) ->
             default = column_default(Default)
         }.
     
-    column_default(undefined) -> undefined;
-    column_default(null) -> undefined;
-    column_default(<<"nextval(", _/binary>>) -> undefined;
+    column_default(null) -> null;
+    column_default(<<"nextval(", _/binary>>) -> null;
     column_default(Default) -> binary_to_list(Default).
 
 
@@ -600,11 +614,12 @@ update_sequence(Table, Ids, Context) when is_atom(Table) ->
     update_sequence(atom_to_list(Table), Ids, Context);
 update_sequence(Table, Ids, Context) ->
     assert_table_name(Table),
+    {_, DbDriver} = Context#context.db,
     Args = lists:zip(Ids, lists:seq(1, length(Ids))),
     F = fun(C) when C =:= none -> 
 		[];
 	   (C) -> 
-		[ {ok, _} = equery1(C, "update \""++Table++"\" set seq = $2 where id = $1", Arg) || Arg <- Args ]
+		[ {ok, _} = equery1(DbDriver, C, "update \""++Table++"\" set seq = $2 where id = $1", Arg) || Arg <- Args ]
 	   end,
     with_connection(F, Context).
 
@@ -690,7 +705,7 @@ assert_table_name1([H|T]) when (H >= $a andalso H =< $z) orelse (H >= $0 andalso
 %% @doc Merge the contents of the props column into the result rows
 %% @spec merge_props(list()) -> list()
 merge_props(null) ->
-    undefined;
+    null;
 merge_props(List) ->
     merge_props(List, []).
     
@@ -700,15 +715,13 @@ merge_props([R|Rest], Acc) ->
     case proplists:get_value(props, R) of
         null ->
             merge_props(Rest, [R|Acc]);
-        <<>> ->
-            merge_props(Rest, [R|Acc]);
         <<?TERM_MAGIC_NUMBER, PropsBin/binary>> ->
             merge_props(Rest, [lists:keydelete(props, 1, R)++binary_to_term(PropsBin)|Acc])
     end.
 
 
-assoc1(C, Sql, Parameters, Timeout) ->
-    case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
+assoc1(DbDriver, C, Sql, Parameters, Timeout) ->
+    case DbDriver:equery(C, Sql, Parameters, Timeout) of
         {ok, Columns, Rows} ->
             Names = [ list_to_atom(binary_to_list(Name)) || #column{name=Name} <- Columns ],
             Rows1 = [ lists:zip(Names, tuple_to_list(Row)) || Row <- Rows ],
@@ -722,16 +735,16 @@ assoc1(C, Sql, Parameters, Timeout) ->
     end.
 
 
-equery1(C, Sql) ->
-    equery1(C, Sql, [], ?PGSQL_TIMEOUT).
+equery1(DbDriver, C, Sql) ->
+    equery1(DbDriver, C, Sql, [], ?TIMEOUT).
 
-equery1(C, Sql, Parameters) when is_list(Parameters); is_tuple(Parameters) ->
-    equery1(C, Sql, Parameters, ?PGSQL_TIMEOUT);
-equery1(C, Sql, Timeout) when is_integer(Timeout) ->
-    equery1(C, Sql, [], Timeout).
+equery1(DbDriver, C, Sql, Parameters) when is_list(Parameters); is_tuple(Parameters) ->
+    equery1(DbDriver, C, Sql, Parameters, ?TIMEOUT);
+equery1(DbDriver, C, Sql, Timeout) when is_integer(Timeout) ->
+    equery1(DbDriver, C, Sql, [], Timeout).
 
-equery1(C, Sql, Parameters, Timeout) ->
-    case z_db_pgsql:equery(C, Sql, Parameters, Timeout) of
+equery1(DbDriver, C, Sql, Parameters, Timeout) ->
+    case DbDriver:equery(C, Sql, Parameters, Timeout) of
         {ok, _Columns, []} -> {error, noresult};
         {ok, _RowCount, _Columns, []} -> {error, noresult};
         {ok, _Columns, [Row|_]} -> {ok, element(1, Row)};
