@@ -709,6 +709,8 @@ merge_props([R|Rest], Acc) ->
     case proplists:get_value(props, R, undefined) of
         undefined ->
             merge_props(Rest, [R|Acc]);
+        <<>> ->
+            merge_props(Rest, [R|Acc]);
         Term when is_list(Term) ->
             merge_props(Rest, [lists:keydelete(props, 1, R)++Term|Acc])
     end.
