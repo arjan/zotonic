@@ -21,8 +21,6 @@
 -module(z_db).
 -author("Marc Worrell <marc@worrell.nl").
 
--define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
-
 -define(TIMEOUT, 5000).
 
 %% interface functions
@@ -375,7 +373,7 @@ insert(Table, Props, Context) ->
         undefined ->
             InsertProps;
         PropsCol -> 
-            lists:keystore(props, 1, InsertProps, {props, encode_props(PropsCol)})
+            lists:keystore(props, 1, InsertProps, {props, {term, cleanup_props(PropsCol)}})
     end,
     
     %% Build the SQL insert statement
@@ -420,13 +418,12 @@ update(Table, Id, Parameters, Context) ->
             true ->
                 % Merge the new props with the props in the database
                 case equery1(DbDriver, C, "select props from \""++Table++"\" where id = $1", [Id]) of
-                    {ok, <<?TERM_MAGIC_NUMBER, OldPropsBin/binary>>} ->
-                        OldProps = binary_to_term(OldPropsBin),
+                    {ok, OldProps} when is_list(OldProps) ->
                         FReplace = fun ({P,_} = T, L) -> lists:keystore(P, 1, L, T) end,
                         NewProps = lists:foldl(FReplace, OldProps, proplists:get_value(props, UpdateProps)),
-                        lists:keystore(props, 1, UpdateProps, {props, encode_props(NewProps)});
+                        lists:keystore(props, 1, UpdateProps, {props, {term, cleanup_props(NewProps)}});
                     _ ->
-                        UpdateProps
+                        lists:keystore(props, 1, UpdateProps, {props, {term, proplists:get_value(props, UpdateProps)}})
                 end;
             false ->
                 UpdateProps
@@ -495,10 +492,6 @@ select(Table, Id, Context) ->
     end,
     {ok, Props}.
 
-
-encode_props(Ps) ->
-    B = term_to_binary(cleanup_props(Ps)),
-    <<?TERM_MAGIC_NUMBER, B/binary>>.
 
 %% @doc Remove all undefined props, translate texts to binaries.
 cleanup_props(Ps) when is_list(Ps) ->
@@ -571,7 +564,7 @@ columns(Table, Context) ->
     end.
     
 
-    columns1({<<"id">>, <<"integer">>, null, Nullable, <<"nextval(", _/binary>>}) ->
+    columns1({<<"id">>, <<"integer">>, undefined, Nullable, <<"nextval(", _/binary>>}) ->
         #column_def{
             name = id,
             type = "serial",
@@ -588,8 +581,8 @@ columns(Table, Context) ->
             default = column_default(Default)
         }.
     
-    column_default(null) -> null;
-    column_default(<<"nextval(", _/binary>>) -> null;
+    column_default(undefined) -> undefined;
+    column_default(<<"nextval(", _/binary>>) -> undefined;
     column_default(Default) -> binary_to_list(Default).
 
 
@@ -704,19 +697,19 @@ assert_table_name1([H|T]) when (H >= $a andalso H =< $z) orelse (H >= $0 andalso
 
 %% @doc Merge the contents of the props column into the result rows
 %% @spec merge_props(list()) -> list()
-merge_props(null) ->
-    null;
+merge_props(undefined) ->
+    undefined;
 merge_props(List) ->
     merge_props(List, []).
     
 merge_props([], Acc) ->
     lists:reverse(Acc);
 merge_props([R|Rest], Acc) ->
-    case proplists:get_value(props, R) of
-        null ->
+    case proplists:get_value(props, R, undefined) of
+        undefined ->
             merge_props(Rest, [R|Acc]);
-        <<?TERM_MAGIC_NUMBER, PropsBin/binary>> ->
-            merge_props(Rest, [lists:keydelete(props, 1, R)++binary_to_term(PropsBin)|Acc])
+        Term when is_list(Term) ->
+            merge_props(Rest, [lists:keydelete(props, 1, R)++Term|Acc])
     end.
 
 
@@ -725,12 +718,7 @@ assoc1(DbDriver, C, Sql, Parameters, Timeout) ->
         {ok, Columns, Rows} ->
             Names = [ list_to_atom(binary_to_list(Name)) || #column{name=Name} <- Columns ],
             Rows1 = [ lists:zip(Names, tuple_to_list(Row)) || Row <- Rows ],
-            Rows2 = case proplists:lookup(props, Rows1) of
-                        {props, PropsBin} when is_binary(PropsBin) -> 
-                            z_utils:prop_replace(props, binary_to_term(PropsBin), Rows1);
-                        _ -> Rows1
-                    end,
-            {ok, Rows2};
+            {ok, Rows1};
         Other -> Other
     end.
 

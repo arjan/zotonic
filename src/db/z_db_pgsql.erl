@@ -34,6 +34,8 @@
         ]).
 
 -define(TIMEOUT, 5000).
+-define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
+
 
 -record(state, {conn}).
 
@@ -75,11 +77,11 @@ init(Args) ->
     end.
 
 handle_call({squery, Sql}, _From, #state{conn=Conn}=State) ->
-    {reply, pgsql:squery(Conn, Sql), State};
+    {reply, decode_reply(pgsql:squery(Conn, Sql)), State};
 handle_call({get_parameter, Sql}, _From, #state{conn=Conn}=State) ->
     {reply, pgsql:get_parameter(Conn, Sql), State};
 handle_call({equery, Sql, Params}, _From, #state{conn=Conn}=State) ->
-    {reply, pgsql:equery(Conn, Sql, Params), State};
+    {reply, decode_reply(pgsql:equery(Conn, Sql, encode_values(Params))), State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -95,3 +97,52 @@ terminate(_Reason, #state{conn=Conn}) ->
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+
+%%
+%% These are conversion routines between how z_db expects values and how epgsl expects them.
+
+%% Notable differences:
+%% - Input values {term, ...} are term_to_binary encoded and decoded
+%% - null <-> undefind
+%% - date/datetimes have a floating-point second argument in epgsql, in Zotonic they don't.
+
+encode_values(L) when is_list(L) ->
+    lists:map(fun encode_value/1, L).
+
+encode_value(undefined) ->
+    null;
+encode_value({term, Term}) ->
+    B = term_to_binary(Term),
+    <<?TERM_MAGIC_NUMBER, B/binary>>;
+encode_value(Value) ->
+    Value.
+
+
+decode_reply({ok, Columns, Rows}) ->
+    {ok, Columns, lists:map(fun decode_values/1, Rows)};
+decode_reply({ok, Nr, Columns, Rows}) ->
+    {ok, Nr, Columns, lists:map(fun decode_values/1, Rows)};
+decode_reply(R) ->
+    R.
+
+decode_values(T) when is_tuple(T) ->
+    list_to_tuple(decode_values(tuple_to_list(T)));
+decode_values(L) when is_list(L) ->
+    lists:map(fun decode_value/1, L).
+
+decode_value({V}) ->
+    {decode_value(V)};
+
+decode_value(null) ->
+    undefined;
+decode_value(<<?TERM_MAGIC_NUMBER, B/binary>>) ->
+    binary_to_term(B);
+decode_value({H,M,S}) when is_float(S) ->
+    {H,M,trunc(S)};
+decode_value({{Y,Mm,D},{H,M,S}}) when is_float(S) ->
+    {{Y,Mm,D},{H,M,trunc(S)}};
+decode_value(V) ->
+    V.
+
+
