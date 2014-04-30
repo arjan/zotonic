@@ -164,7 +164,8 @@ get(Key, Props) ->
 
 
 %% @doc Check if we have database connection
-has_connection(#context{host=Host}) ->
+has_connection(#context{host=_Host}) ->
+    %% FIXME?
     true. %is_pid(erlang:whereis(Host)).
 
 
@@ -373,7 +374,7 @@ insert(Table, Props, Context) ->
         undefined ->
             InsertProps;
         PropsCol -> 
-            lists:keystore(props, 1, InsertProps, {props, {term, cleanup_props(PropsCol)}})
+            lists:keystore(props, 1, InsertProps, {props, ?DB_PROPS(cleanup_props(PropsCol))})
     end,
     
     %% Build the SQL insert statement
@@ -421,9 +422,9 @@ update(Table, Id, Parameters, Context) ->
                     {ok, OldProps} when is_list(OldProps) ->
                         FReplace = fun ({P,_} = T, L) -> lists:keystore(P, 1, L, T) end,
                         NewProps = lists:foldl(FReplace, OldProps, proplists:get_value(props, UpdateProps)),
-                        lists:keystore(props, 1, UpdateProps, {props, {term, cleanup_props(NewProps)}});
+                        lists:keystore(props, 1, UpdateProps, {props, ?DB_PROPS(cleanup_props(NewProps))});
                     _ ->
-                        lists:keystore(props, 1, UpdateProps, {props, {term, proplists:get_value(props, UpdateProps)}})
+                        lists:keystore(props, 1, UpdateProps, {props, ?DB_PROPS(proplists:get_value(props, UpdateProps))})
                 end;
             false ->
                 UpdateProps

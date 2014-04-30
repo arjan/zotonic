@@ -221,6 +221,8 @@
 %% Notifier defines
 -define(NOTIFIER_DEFAULT_PRIORITY, 500).
 
+-define(DB_PROPS(N), {term, N}).
+
 %% Below is copied (and adapted) from Nitrogen, which is copyright 2008-2009 Rusty Klophaus
 
 %%% LOGGING %%%

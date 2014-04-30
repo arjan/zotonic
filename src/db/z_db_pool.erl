@@ -76,9 +76,17 @@ child_spec(Host, SiteProps) ->
             [poolboy:child_spec(Name, PoolArgs, WorkerArgs)]
     end.
 
+%% @doc Any argument starting with 'db' is considered a DB driver
+%% argument and those are the only arguments that are given to the
+%% database pool worker processes.
 db_opts(SiteProps) ->
-    [{K, proplists:get_value(K, SiteProps, z_config:get(K))}
-     || K <- [dbhost, dbport, dbuser, dbpassword, dbdatabase, dbschema]].
+    lists:filter(fun({K, _}) ->
+                         case atom_to_list(K) of
+                             "db"++_ -> true;
+                             _ -> false
+                         end
+                 end,
+                 SiteProps).
 
 get_connection(#context{db={Pool,_}}) ->
     poolboy:checkout(Pool).

@@ -142,14 +142,14 @@ install_category(C) ->
             insert into rsc (id, is_protected, visible_for, category_id, name, uri, props)
             values (116, true, 0, 116, 'category', $1, $2)
             ", [    undefined, 
-                    [{title, {trans, [{en, <<"Category">>}, {nl, <<"Categorie">>}]}}] 
+                    ?DB_PROPS([{title, {trans, [{en, <<"Category">>}, {nl, <<"Categorie">>}]}}])
                 ], C),
 
     {ok, 1} = z_db:equery("
             insert into rsc (id, is_protected, visible_for, category_id, name, uri, props)
             values (115, true, 0, 116, 'meta', $1, $2)
             ", [    undefined, 
-                    [{title, {trans, [{en, <<"Meta">>}, {nl, <<"Meta">>}]}}] 
+                    ?DB_PROPS([{title, {trans, [{en, <<"Meta">>}, {nl, <<"Meta">>}]}}])
                 ], C),
     
     %% Now that we have the category "category" we can insert all other categories.
@@ -194,7 +194,7 @@ install_category(C) ->
         {ok, 1} = z_db:equery("
                 insert into rsc (id, visible_for, category_id, is_protected, name, uri, props)
                 values ($1, 0, 116, $2, $3, $4, $5)
-                ", [ Id, Protected, Name, Uri, Props ], C),
+                ", [ Id, Protected, Name, Uri, ?DB_PROPS(Props) ], C),
         {ok, 1} = z_db:equery("
                 insert into category (id, parent_id, seq)
                 values ($1, $2, $3)", [Id, ParentId, Seq], C)
@@ -211,7 +211,7 @@ install_rsc(C) ->
     ?DEBUG("Inserting base resources (admin, etc.)"),
     Rsc = [
         % id  vsfr  cat   protect name,         props
-        [   1,  0,  102,  true,    "administrator",   [{title,<<"Site Administrator">>}] ]
+        [   1,  0,  102,  true,    "administrator",   ?DB_PROPS([{title,<<"Site Administrator">>}]) ]
     ],
     
     [ {ok,1} = z_db:equery("
@@ -240,13 +240,13 @@ install_predicate(C) ->
     ?DEBUG("Inserting predicates"),
     Preds = [
         % id   protect name       uri                                                  props
-        [ 300, true,   "about",    "http://www.w3.org/1999/02/22-rdf-syntax-ns#about",  [{reversed, false},{title, {trans, [{en,"About"},    {nl,"Over"}]}}]],
-        [ 301, true,   "author",   "http://purl.org/dc/terms/creator",                  [{reversed, false},{title, {trans, [{en,"Author"},   {nl,"Auteur"}]}}]],
-        [ 303, true,   "relation", "http://purl.org/dc/terms/relation",                 [{reversed, false},{title, {trans, [{en,"Relation"}, {nl,"Relatie"}]}}]],
-        [ 304, true,   "depiction","http://xmlns.com/foaf/0.1/depiction",               [{reversed, false},{title, {trans, [{en,"Depiction"},{nl,"Afbeelding"}]}}]],
-        [ 308, true,   "subject",  "http://purl.org/dc/elements/1.1/subject",           [{reversed, false},{title, {trans, [{en,"Keyword"},  {nl,"Trefwoord"}]}}]],
-        [ 309, true,   "hasdocument", "http://zotonic.net/predicate/hasDocument",       [{reversed, false},{title, {trans, [{en,"Document"}, {nl,"Document"}]}}]],
-		[ 310, true,   "haspart",  "http://purl.org/dc/terms/hasPart",					[{reversed, false},{title, {trans, [{en,"Contains"}, {nl,"Bevat"}]}}]]
+        [ 300, true,   "about",    "http://www.w3.org/1999/02/22-rdf-syntax-ns#about",  ?DB_PROPS([{reversed, false},{title, {trans, [{en,"About"},    {nl,"Over"}]}}])],
+        [ 301, true,   "author",   "http://purl.org/dc/terms/creator",                  ?DB_PROPS([{reversed, false},{title, {trans, [{en,"Author"},   {nl,"Auteur"}]}}])],
+        [ 303, true,   "relation", "http://purl.org/dc/terms/relation",                 ?DB_PROPS([{reversed, false},{title, {trans, [{en,"Relation"}, {nl,"Relatie"}]}}])],
+        [ 304, true,   "depiction","http://xmlns.com/foaf/0.1/depiction",               ?DB_PROPS([{reversed, false},{title, {trans, [{en,"Depiction"},{nl,"Afbeelding"}]}}])],
+        [ 308, true,   "subject",  "http://purl.org/dc/elements/1.1/subject",           ?DB_PROPS([{reversed, false},{title, {trans, [{en,"Keyword"},  {nl,"Trefwoord"}]}}])],
+        [ 309, true,   "hasdocument", "http://zotonic.net/predicate/hasDocument",       ?DB_PROPS([{reversed, false},{title, {trans, [{en,"Document"}, {nl,"Document"}]}}])],
+		[ 310, true,   "haspart",  "http://purl.org/dc/terms/hasPart",					?DB_PROPS([{reversed, false},{title, {trans, [{en,"Contains"}, {nl,"Bevat"}]}}])]
     ],
 
     {ok, CatId}   = z_db:squery1("select id from rsc where name = 'predicate'", C),
@@ -293,7 +293,7 @@ enumerate_categories(C) ->
     {ok, _, CatTuples} = z_db:equery("select id, parent_id, seq from category order by seq, id", C),
     Enums = m_category:enumerate(CatTuples),
     [
-        {ok, _} = z_db:equery("update category set nr = $2, lvl = $3, lft = $4, rght = $5, props = $6 where id = $1", [CatId, Nr, Level, Left, Right, [{path,Path}]], C)
+        {ok, _} = z_db:equery("update category set nr = $2, lvl = $3, lft = $4, rght = $5, props = $6 where id = $1", [CatId, Nr, Level, Left, Right, ?DB_PROPS([{path,Path}])], C)
         || {CatId, Nr, Level, Left, Right, Path} <- Enums
     ],
     ok.

@@ -36,12 +36,15 @@
 -define(TIMEOUT, 5000).
 -define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
 
-
 -record(state, {conn}).
+
+
+%%
+%% API
+%%
 
 start_link(Args) ->
     gen_server:start_link(?MODULE, Args, []).
-
 
 squery(Worker, Sql) ->
     gen_server:call(Worker, {squery, Sql}, ?TIMEOUT).
@@ -51,16 +54,20 @@ get_parameter(Worker, Parameter) when is_binary(Parameter) ->
 
 equery(Worker, Sql, Parameters, Timeout) ->
     gen_server:call(Worker, {equery, Sql, Parameters}, Timeout).
-    
+
+
+%%
+%% gen_server callbacks
+%%
 
 init(Args) ->
     process_flag(trap_exit, true),
-    Hostname = proplists:get_value(dbhost, Args),
-    Port = proplists:get_value(dbport, Args),
-    Database = proplists:get_value(dbdatabase, Args),
-    Username = proplists:get_value(dbuser, Args),
-    Password = proplists:get_value(dbpassword, Args),
-    Schema = proplists:get_value(dbschema, Args),
+    Hostname = get_arg(dbhost, Args),
+    Port = get_arg(dbport, Args),
+    Database = get_arg(dbdatabase, Args),
+    Username = get_arg(dbuser, Args),
+    Password = get_arg(dbpassword, Args),
+    Schema = get_arg(dbschema, Args),
     
     case pgsql:connect(Hostname, Username, Password,
                        [{database, Database}, {port, Port}]) of
@@ -100,10 +107,18 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %%
+%% Helper functions
+%%
+
+get_arg(K, Args) ->
+    proplists:get_value(K, Args, z_config:get(K)).
+
+
+%%
 %% These are conversion routines between how z_db expects values and how epgsl expects them.
 
 %% Notable differences:
-%% - Input values {term, ...} are term_to_binary encoded and decoded
+%% - Input values {term, ...} (use the ?DB_PROPS(...) macro!) are term_to_binary encoded and decoded
 %% - null <-> undefind
 %% - date/datetimes have a floating-point second argument in epgsql, in Zotonic they don't.
 
