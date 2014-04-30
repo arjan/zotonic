@@ -104,8 +104,14 @@ init(Host) ->
 
     Processes = [
             Notifier, Depcache, Translation, Installer, Session, 
-            Dispatcher, Template, MediaClass, DropBox, Pivot, MediaCleanup,
+            Dispatcher, Template, MediaClass, Pivot, DropBox, MediaCleanup,
             ModuleIndexer, Modules,
             PostStartup
-    ],
-    {ok, {{one_for_all, 2, 1}, z_db_pool:child_spec(Host, SiteProps) ++ Processes}}.
+        ],
+
+    Processes1 = case z_db_pool:child_spec(Host, SiteProps) of
+                     undefined -> Processes;
+                     DbSpec when is_tuple(DbSpec) ->
+                         [DbSpec | Processes ]
+                 end,
+    {ok, {{one_for_all, 2, 1}, Processes1}}.

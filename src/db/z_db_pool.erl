@@ -58,7 +58,7 @@ child_spec(Host, SiteProps) ->
     case proplists:get_value(dbdatabase, SiteProps, atom_to_list(Host)) of
         none -> 
             %% No database connection needed
-            [];
+            undefined;
         _ ->
             % Add a db pool to the site's processes
             PoolSize    = proplists:get_value(dbpool_size,     SiteProps, 5),
@@ -73,7 +73,7 @@ child_spec(Host, SiteProps) ->
                         {worker_module, WorkerModule},
                         {size, PoolSize},
                         {max_overflow, PoolMax}],
-            [poolboy:child_spec(Name, PoolArgs, WorkerArgs)]
+            poolboy:child_spec(Name, PoolArgs, WorkerArgs)
     end.
 
 %% @doc Any argument starting with 'db' is considered a DB driver

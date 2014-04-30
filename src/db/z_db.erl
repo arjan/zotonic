@@ -164,19 +164,18 @@ get(Key, Props) ->
 
 
 %% @doc Check if we have database connection
-has_connection(#context{host=_Host}) ->
-    %% FIXME?
-    true. %is_pid(erlang:whereis(Host)).
+has_connection(#context{db={Pool, _Driver}}) ->
+    is_pid(erlang:whereis(Pool)).
 
 
 %% @doc Transaction handler safe function for fetching a db connection
 get_connection(#context{dbc=undefined} = Context) ->
-%    case has_connection(Context) of
-%        true ->
+    case has_connection(Context) of
+        true ->
             z_db_pool:get_connection(Context);
-%        false ->
-%            none
-%    end;
+        false ->
+            none
+    end;
 get_connection(Context) ->
     Context#context.dbc.
 
