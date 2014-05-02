@@ -36,7 +36,9 @@
 -define(TIMEOUT, 5000).
 -define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
 
--record(state, {conn}).
+-define(IDLE_TIMEOUT, 60000).
+
+-record(state, {conn, conn_args}).
 
 
 %%
@@ -62,42 +64,36 @@ equery(Worker, Sql, Parameters, Timeout) ->
 
 init(Args) ->
     process_flag(trap_exit, true),
-    Hostname = get_arg(dbhost, Args),
-    Port = get_arg(dbport, Args),
-    Database = get_arg(dbdatabase, Args),
-    Username = get_arg(dbuser, Args),
-    Password = get_arg(dbpassword, Args),
-    Schema = get_arg(dbschema, Args),
-    
-    case pgsql:connect(Hostname, Username, Password,
-                       [{database, Database}, {port, Port}]) of
-        {ok, Conn} ->
-            case pgsql:squery(Conn, "SET search_path TO " ++ Schema) of
-                {ok, [], []} ->
-                    {ok, #state{conn=Conn}};
-                Error -> 
-                    pgsql:close(Conn),
-                    {stop, Error}
-            end;
-        {error, _} = E ->
-            {stop, E}
-    end.
+    %% Start disconnected
+    {ok, #state{conn=undefined, conn_args=Args}}.
+
+
+handle_call(Cmd, _From, #state{conn=undefined}=State) ->
+    handle_call(Cmd, _From, connect(State));
 
 handle_call({squery, Sql}, _From, #state{conn=Conn}=State) ->
-    {reply, decode_reply(pgsql:squery(Conn, Sql)), State};
+    {reply, decode_reply(pgsql:squery(Conn, Sql)), State, ?IDLE_TIMEOUT};
+
 handle_call({get_parameter, Sql}, _From, #state{conn=Conn}=State) ->
-    {reply, pgsql:get_parameter(Conn, Sql), State};
+    {reply, pgsql:get_parameter(Conn, Sql), State, ?IDLE_TIMEOUT};
+
 handle_call({equery, Sql, Params}, _From, #state{conn=Conn}=State) ->
-    {reply, decode_reply(pgsql:equery(Conn, Sql, encode_values(Params))), State};
+    {reply, decode_reply(pgsql:equery(Conn, Sql, encode_values(Params))), State, ?IDLE_TIMEOUT};
+
 handle_call(_Request, _From, State) ->
-    {reply, ok, State}.
+    {reply, unknown_call, State}.
+
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
+handle_info(timeout, State) ->
+    {noreply, disconnect(State)};
 handle_info(_Info, State) ->
     {noreply, State}.
 
+terminate(_Reason, #state{conn=undefined}) ->
+    ok;
 terminate(_Reason, #state{conn=Conn}) ->
     ok = pgsql:close(Conn),
     ok.
@@ -110,8 +106,34 @@ code_change(_OldVsn, State, _Extra) ->
 %% Helper functions
 %%
 
+connect(State=#state{conn_args=Args}) ->
+    Hostname = get_arg(dbhost, Args),
+    Port = get_arg(dbport, Args),
+    Database = get_arg(dbdatabase, Args),
+    Username = get_arg(dbuser, Args),
+    Password = get_arg(dbpassword, Args),
+    Schema = get_arg(dbschema, Args),
+    case pgsql:connect(Hostname, Username, Password,
+                       [{database, Database}, {port, Port}]) of
+        {ok, Conn} ->
+            case pgsql:squery(Conn, "SET search_path TO " ++ Schema) of
+                {ok, [], []} ->
+                    State#state{conn=Conn};
+                Error -> 
+                    pgsql:close(Conn),
+                    throw({error, Error})
+            end;
+        {error, _} = E ->
+            throw(E)
+    end.
+
+disconnect(State) ->
+    pgsql:close(State#state.conn),
+    State#state{conn=undefined}.
+    
 get_arg(K, Args) ->
     proplists:get_value(K, Args, z_config:get(K)).
+
 
 
 %%
@@ -159,5 +181,3 @@ decode_value({{Y,Mm,D},{H,M,S}}) when is_float(S) ->
     {{Y,Mm,D},{H,M,trunc(S)}};
 decode_value(V) ->
     V.
-
-

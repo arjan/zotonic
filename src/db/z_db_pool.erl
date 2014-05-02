@@ -61,8 +61,7 @@ child_spec(Host, SiteProps) ->
             undefined;
         _ ->
             % Add a db pool to the site's processes
-%            PoolSize    = proplists:get_value(dbpool_size,     SiteProps, 5),
-%            PoolMax     = proplists:get_value(dbpool_max_overflow,     SiteProps, 20),
+            PoolSize    = proplists:get_value(db_max_connections, SiteProps, 10),
 
             Name = db_pool_name(Host),
 
@@ -71,7 +70,7 @@ child_spec(Host, SiteProps) ->
             
             PoolArgs = [{name, {local, Name}},
                         {worker_module, WorkerModule},
-                        {size, 10},
+                        {size, PoolSize},
                         {max_overflow, 0}],
             poolboy:child_spec(Name, PoolArgs, WorkerArgs)
     end.
