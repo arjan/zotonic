@@ -30,6 +30,9 @@
     hostname_port/1,
     site_protocol/1,
 
+    db_pool/1,
+    db_driver/1,
+         
     is_request/1,
 
     prune_for_spawn/1,
@@ -354,6 +357,15 @@ abs_url(Url, Context) ->
         true;
     has_url_protocol(_) ->
         false.
+
+
+%% @doc Fetch the pid of the database worker pool for this site
+db_pool(#context{db={Pool, _Driver}}) ->
+    Pool.
+
+%% @doc Fetch the database driver module for this site
+db_driver(#context{db={_Pool, Driver}}) ->
+    Driver.
 
 %% @doc Fetch the protocol for absolute urls referring to the site (defaults to http).
 %%      Useful when the site is behind a https proxy.

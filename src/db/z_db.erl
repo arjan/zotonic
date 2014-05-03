@@ -119,7 +119,7 @@ transaction(Function, Options, Context) ->
 transaction1(Function, #context{dbc=undefined} = Context) ->
     case has_connection(Context) of
         true ->
-            {_, DbDriver} = Context#context.db,
+            DbDriver = z_context:db_driver(Context),
             C = get_connection(Context),
             Context1 = Context#context{dbc=C},
             Result = try
@@ -148,7 +148,6 @@ transaction1(Function, Context) ->
     Function(Context).
     
     
-
 %% @doc Clear any transaction in the context, useful when starting a thread with this context.
 transaction_clear(#context{dbc=undefined} = Context) ->
     Context;
@@ -164,8 +163,8 @@ get(Key, Props) ->
 
 
 %% @doc Check if we have database connection
-has_connection(#context{db={Pool, _Driver}}) ->
-    is_pid(erlang:whereis(Pool)).
+has_connection(Context) ->
+    is_pid(erlang:whereis(z_context:db_pool(Context))).
 
 
 %% @doc Transaction handler safe function for fetching a db connection
@@ -225,7 +224,7 @@ assoc_props_row(Sql, Parameters, Context) ->
 get_parameter(Parameter, Context) ->
     with_connection(
       fun(C) ->
-              {_, DbDriver} = Context#context.db,
+              DbDriver = z_context:db_driver(Context),
               {ok, Result} = DbDriver:get_parameter(C, z_convert:to_binary(Parameter)),
               Result
       end,
@@ -243,7 +242,7 @@ assoc(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     assoc(Sql, [], Context, Timeout).
 
 assoc(Sql, Parameters, Context, Timeout) ->
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     F = fun(C) when C =:= none -> [];
 	   (C) ->
                 {ok, Result} = assoc1(DbDriver, C, Sql, Parameters, Timeout),
@@ -261,7 +260,7 @@ assoc_props(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
     assoc_props(Sql, [], Context, Timeout).
 
 assoc_props(Sql, Parameters, Context, Timeout) ->
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     F = fun(C) when C =:= none -> [];
 	   (C) ->
                 {ok, Result} = assoc1(DbDriver, C, Sql, Parameters, Timeout),
@@ -281,7 +280,7 @@ q(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 q(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> [];
 	   (C) ->
-                {_, DbDriver} = Context#context.db,
+                DbDriver = z_context:db_driver(Context),
                 case DbDriver:equery(C, Sql, Parameters, Timeout) of
                     {ok, _Affected, _Cols, Rows} -> Rows;
                     {ok, _Cols, Rows} -> Rows;
@@ -304,7 +303,7 @@ q1(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 q1(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> undefined;
            (C) ->
-                {_, DbDriver} = Context#context.db,
+                DbDriver = z_context:db_driver(Context),
                 case equery1(DbDriver, C, Sql, Parameters, Timeout) of
                     {ok, Value} -> Value;
                     {error, noresult} -> undefined;
@@ -337,7 +336,7 @@ equery(Sql, #context{} = Context, Timeout) when is_integer(Timeout) ->
 equery(Sql, Parameters, Context, Timeout) ->
     F = fun(C) when C =:= none -> {error, noresult};
            (C) ->
-                {_, DbDriver} = Context#context.db,
+                DbDriver = z_context:db_driver(Context),
                 DbDriver:equery(C, Sql, Parameters, Timeout)
         end,
     with_connection(F, Context).
@@ -351,7 +350,7 @@ insert(Table, Context) ->
     assert_table_name(Table),
     with_connection(
       fun(C) ->
-              {_, DbDriver} = Context#context.db,
+              DbDriver = z_context:db_driver(Context),
               equery1(DbDriver, C, "insert into \""++Table++"\" default values returning id")
       end,
       Context).
@@ -391,7 +390,7 @@ insert(Table, Props, Context) ->
 
     F =
         fun(C) ->
-             {_, DbDriver} = Context#context.db,
+             DbDriver = z_context:db_driver(Context),
              Id = case equery1(DbDriver, C, FinalSql, Parameters) of
 			 {ok, IdVal} -> IdVal;
 			 {error, noresult} -> undefined;
@@ -410,7 +409,7 @@ update(Table, Id, Parameters, Context) when is_atom(Table) ->
     update(atom_to_list(Table), Id, Parameters, Context);
 update(Table, Id, Parameters, Context) ->
     assert_table_name(Table),
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     Cols         = column_names(Table, Context),
     UpdateProps  = prepare_cols(Cols, Parameters),
     F = fun(C) ->
@@ -451,7 +450,7 @@ delete(Table, Id, Context) when is_atom(Table) ->
     delete(atom_to_list(Table), Id, Context);
 delete(Table, Id, Context) ->
     assert_table_name(Table),
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     F = fun(C) ->
         Sql = "delete from \""++Table++"\" where id = $1", 
         case equery1(DbDriver, C, Sql, [Id]) of
@@ -472,7 +471,7 @@ select(Table, Id, Context) when is_atom(Table) ->
     select(atom_to_list(Table), Id, Context);
 select(Table, Id, Context) ->
     assert_table_name(Table),
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     F = fun(C) ->
 		Sql = "select * from \""++Table++"\" where id = $1 limit 1", 
 		assoc1(DbDriver, C, Sql, [Id], ?TIMEOUT)
@@ -607,7 +606,7 @@ update_sequence(Table, Ids, Context) when is_atom(Table) ->
     update_sequence(atom_to_list(Table), Ids, Context);
 update_sequence(Table, Ids, Context) ->
     assert_table_name(Table),
-    {_, DbDriver} = Context#context.db,
+    DbDriver = z_context:db_driver(Context),
     Args = lists:zip(Ids, lists:seq(1, length(Ids))),
     F = fun(C) when C =:= none -> 
 		[];
