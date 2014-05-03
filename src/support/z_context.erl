@@ -278,6 +278,7 @@ prune_for_async(#context{} = Context) ->
         dropbox_server=Context#context.dropbox_server,
         pivot_server=Context#context.pivot_server,
         module_indexer=Context#context.module_indexer,
+        db=Context#context.db,
         translation_table=Context#context.translation_table,
         language=Context#context.language
     }.
@@ -312,7 +313,8 @@ prune_for_database(Context) ->
         scomp_server=Context#context.scomp_server,
         dropbox_server=Context#context.dropbox_server,
         pivot_server=Context#context.pivot_server,
-        module_indexer=Context#context.module_indexer
+        module_indexer=Context#context.module_indexer,
+        db=Context#context.db
     }.
 
 
