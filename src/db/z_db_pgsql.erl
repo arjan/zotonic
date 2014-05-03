@@ -35,7 +35,8 @@
 -export([
          test_connection/1,
          squery/3,
-         equery/4
+         equery/4,
+         get_raw_connection/1
         ]).
 
 -define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
@@ -68,6 +69,10 @@ equery(Worker, Sql, Parameters, Timeout) ->
     gen_server:call(Worker, {equery, Sql, Parameters}, Timeout).
 
 
+%% This function should not be used but currently is required by the install / upgrade routines.
+get_raw_connection(Worker) ->
+    gen_server:call(Worker, get_raw_connection).
+
 %%
 %% gen_server callbacks
 %%
@@ -86,6 +91,9 @@ handle_call({squery, Sql}, _From, #state{conn=Conn}=State) ->
 
 handle_call({equery, Sql, Params}, _From, #state{conn=Conn}=State) ->
     {reply, decode_reply(pgsql:equery(Conn, Sql, encode_values(Params))), State, ?IDLE_TIMEOUT};
+
+handle_call(get_raw_connection, _From, #state{conn=Conn}=State) ->
+    {reply, Conn, State, ?IDLE_TIMEOUT};
 
 handle_call(_Request, _From, State) ->
     {reply, unknown_call, State}.

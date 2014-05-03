@@ -27,7 +27,6 @@
 
 %% interface functions
 -export([
-    pre_install/2,
     install/1,
 
     medium_log_table/0,
@@ -36,27 +35,6 @@
 ]).
 
 -include_lib("zotonic.hrl").
-
-%% @doc Perform pre-installation commands.
-%% @spec pre_install(Host, SiteProps) -> ok
-pre_install(testsandbox, SiteProps) ->
-    %% The test sandbox needs cleanup first:
-    {ok, C} = pgsql_pool:get_connection(testsandbox),
-    Schema = proplists:get_value(dbschema, SiteProps, "public"),
-
-    %% Drop all tables
-    pgsql:equery(C, "DROP SCHEMA " ++ Schema ++ " CASCADE"),
-    pgsql:equery(C, "CREATE SCHEMA " ++ Schema),
-
-    %% Remove all files
-    FilesDir = z_utils:os_filename(filename:join([z_utils:lib_dir(priv), "sites", testsandbox, "files", "preview"])),
-    os:cmd("rm -rf " ++ z_utils:os_filename(FilesDir)),
-    os:cmd("mkdir -p " ++ z_utils:os_filename(FilesDir)),
-    ok;
-
-pre_install(_, _) ->
-    ok.
-
 
 %% @doc Install the database for the given host.
 %% @spec install(Host) -> ok

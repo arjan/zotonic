@@ -28,6 +28,8 @@
 -export([
 
     has_connection/1,
+    with_connection/2,
+         
     transaction/2,
     transaction/3,
     transaction_clear/1,

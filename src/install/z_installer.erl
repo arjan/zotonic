@@ -36,57 +36,33 @@ start_link(SiteProps) when is_list(SiteProps) ->
     install_check(SiteProps),
     ignore.
 
-install_check(_) ->
-    ok;
 install_check(SiteProps) ->
     %% Check if the config table exists, if so then assume that all is ok
-    Name     = proplists:get_value(host, SiteProps),
-    Database = case proplists:get_value(dbdatabase, SiteProps, inherit) of
-                   inherit ->
-                       pgsql_pool:get_database_opt(database, Name);
-                   Db ->
-                       Db
-               end,
-
-    case Database of
-        none ->
-            ignore;
-        _ ->
-            {ok, Schema} = pgsql_pool:get_database_opt(schema, Name),
-            {ok, C} = pgsql_pool:get_connection(Name),
-            {ok, [], []} = pgsql:squery(C, "BEGIN"),
-
-            ok = z_install:pre_install(Name, SiteProps),
-
-            case has_table(C, "config", Database, Schema) of
+    Context = z_context:new(proplists:get_value(host, SiteProps)),
+    z_db:with_connection(
+      fun(none) ->
+              ignore;
+         (Conn) ->
+              Options0 = z_db_pool:get_database_options(Context),
+              Options = lists:filter(fun({dbpassword,_}) -> false; (_) -> true end, Options0),
+              case z_db:table_exists(config, Context) of
                 false ->
-                    {ok, [], []} = pgsql:squery(C, "COMMIT"),
-                    pgsql_pool:return_connection(Name, C),
-
-                    {ok, User} = pgsql_pool:get_database_opt(username, Name),
-                    {ok, Host} = pgsql_pool:get_database_opt(host, Name),
-                    {ok, Port} = pgsql_pool:get_database_opt(port, Name),
-                    lager:warning("~p: Installing database ~s.~s at ~s@~s:~s", 
-                                  [
-                                   Name,
-                                   z_convert:to_list(Database),
-                                   z_convert:to_list(Schema),
-                                   z_convert:to_list(User),
-                                   z_convert:to_list(Host),
-                                   z_convert:to_list(Port)
-                                  ]),
-                    z_install:install(Name);
-                true -> 
-                    ok = upgrade(C, Database, Schema),
-                    sanity_check(C, Database, Schema),
-
-                    {ok, [], []} = pgsql:squery(C, "COMMIT"),
-                    pgsql_pool:return_connection(Name, C)
-            end
-    end.
+                      lager:warning("~p: Installing database with db options: ~p", [Options]),
+                      z_install:install(Conn);
+                  true ->
+                      C = z_db_pgsql:get_raw_connection(Conn),
+                      {ok, [], []} = pgsql:squery(C, "BEGIN"),
+                      Database = proplists:get_value(dbdatabase, Options),
+                      Schema = proplists:get_value(dbschema, Options),
+                      ok = upgrade(C, Database, Schema),
+                      sanity_check(C, Database, Schema),
+                      {ok, [], []} = pgsql:squery(C, "COMMIT")
+              end
+      end,
+      Context).
 
 has_table(C, Table, Database, Schema) ->    
-    {ok, HasTable} = pgsql:equery1(C, "
+    {ok, _, [{HasTable}]} = pgsql:equery(C, "
             select count(*) 
             from information_schema.tables 
             where table_catalog = $1 
@@ -98,7 +74,7 @@ has_table(C, Table, Database, Schema) ->
 
 %% Check if a column in a table exists by querying the information schema.
 has_column(C, Table, Column, Database, Schema) ->
-    {ok, HasColumn} = pgsql:equery1(C, "
+    {ok, _, [{HasColumn}]} = pgsql:equery(C, "
             select count(*) 
             from information_schema.columns 
             where table_catalog = $1 
@@ -108,7 +84,7 @@ has_column(C, Table, Column, Database, Schema) ->
     HasColumn =:= 1.
 
 get_column_type(C, Table, Column, Database, Schema) ->
-    {ok, ColumnType} = pgsql:equery1(C, "
+    {ok, _, [{ColumnType}]} = pgsql:equery(C, "
             select data_type
             from information_schema.columns 
             where table_catalog = $1 
@@ -208,7 +184,7 @@ drop_visitor(C, Database, Schema) ->
 
 
 extent_mime(C, Database, Schema) ->
-    {ok, Length} = pgsql:equery1(C, "
+    {ok, _, [{Length}]} = pgsql:equery(C, "
             select character_maximum_length 
             from information_schema.columns 
             where table_catalog = $1 
