@@ -70,16 +70,16 @@ code_change(_OldVsn, State, _Extra) ->
 do_startup(Context) ->
 
     case z_db:has_connection(Context) of
-        true -> z_install_data:install_modules(Context);
-        false -> ok
-    end,
-    
-    % Make sure all modules are started
-    z_module_manager:upgrade(Context),
+        true ->
+            z_install_data:install_modules(Context),
 
-    % Put software version in database
-    % @todo Check if current version != database version and run upgrader (and downgrader?)
-    case z_db:has_connection(Context) of
-        true -> m_config:set_value(zotonic, version, ?ZOTONIC_VERSION, Context);
-        false -> ok
+            %% Make sure all modules are started
+            z_module_manager:upgrade(Context),
+
+            m_config:set_value(zotonic, version, ?ZOTONIC_VERSION, Context);
+
+        false ->
+
+            %% Make sure all modules are started
+            z_module_manager:upgrade(Context)
     end.

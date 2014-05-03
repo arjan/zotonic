@@ -22,12 +22,18 @@
 -behaviour(gen_server).
 
 -behaviour(poolboy_worker).
+-behaviour(z_db_worker).
 
--export([start_link/1]).
+%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
+%% poolboy_worker callbacks
+-export([start_link/1]).
+
+%% z_db_worker callbacks
 -export([
+         test_connection/1,
          squery/2,
          get_parameter/2,
          equery/4
@@ -47,6 +53,15 @@
 
 start_link(Args) ->
     gen_server:start_link(?MODULE, Args, []).
+
+test_connection(Args) ->
+    case connect(Args) of
+        {ok, Conn} ->
+            pgsql:close(Conn),
+            ok;
+        {error, _} = E ->
+            E
+    end.
 
 squery(Worker, Sql) ->
     gen_server:call(Worker, {squery, Sql}, ?TIMEOUT).
@@ -106,7 +121,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% Helper functions
 %%
 
-connect(State=#state{conn_args=Args}) ->
+connect(Args) when is_list(Args) ->
     Hostname = get_arg(dbhost, Args),
     Port = get_arg(dbport, Args),
     Database = get_arg(dbdatabase, Args),
@@ -118,11 +133,18 @@ connect(State=#state{conn_args=Args}) ->
         {ok, Conn} ->
             case pgsql:squery(Conn, "SET search_path TO " ++ Schema) of
                 {ok, [], []} ->
-                    State#state{conn=Conn};
+                    {ok, Conn};
                 Error -> 
                     pgsql:close(Conn),
-                    throw({error, Error})
+                    {error, Error}
             end;
+        {error, _} = E ->
+            E
+    end;
+connect(State=#state{conn_args=Args}) ->
+    case connect(Args) of
+        {ok, Conn} ->
+            State#state{conn=Conn};
         {error, _} = E ->
             throw(E)
     end.
