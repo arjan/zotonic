@@ -34,12 +34,10 @@
 %% z_db_worker callbacks
 -export([
          test_connection/1,
-         squery/2,
-         get_parameter/2,
+         squery/3,
          equery/4
         ]).
 
--define(TIMEOUT, 5000).
 -define(TERM_MAGIC_NUMBER, 16#01326A3A:1/big-unsigned-unit:32).
 
 -define(IDLE_TIMEOUT, 60000).
@@ -63,11 +61,8 @@ test_connection(Args) ->
             E
     end.
 
-squery(Worker, Sql) ->
-    gen_server:call(Worker, {squery, Sql}, ?TIMEOUT).
-
-get_parameter(Worker, Parameter) when is_binary(Parameter) ->
-    gen_server:call(Worker, {get_parameter, Parameter}, ?TIMEOUT).
+squery(Worker, Sql, Timeout) ->
+    gen_server:call(Worker, {squery, Sql}, Timeout).
 
 equery(Worker, Sql, Parameters, Timeout) ->
     gen_server:call(Worker, {equery, Sql, Parameters}, Timeout).
@@ -88,9 +83,6 @@ handle_call(Cmd, _From, #state{conn=undefined}=State) ->
 
 handle_call({squery, Sql}, _From, #state{conn=Conn}=State) ->
     {reply, decode_reply(pgsql:squery(Conn, Sql)), State, ?IDLE_TIMEOUT};
-
-handle_call({get_parameter, Sql}, _From, #state{conn=Conn}=State) ->
-    {reply, pgsql:get_parameter(Conn, Sql), State, ?IDLE_TIMEOUT};
 
 handle_call({equery, Sql, Params}, _From, #state{conn=Conn}=State) ->
     {reply, decode_reply(pgsql:equery(Conn, Sql, encode_values(Params))), State, ?IDLE_TIMEOUT};

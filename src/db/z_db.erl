@@ -25,13 +25,12 @@
 
 %% interface functions
 -export([
+
     has_connection/1,
     transaction/2,
     transaction/3,
     transaction_clear/1,
-    set/3,
-    get/2,
-    get_parameter/2,
+
     assoc_row/2,
     assoc_row/3,
     assoc_props_row/2,
@@ -50,13 +49,19 @@
     q1/4,
     q_row/2,
     q_row/3,
+
+    squery/2,
+    squery/3,
     equery/2,
     equery/3,
+    equery/4,
+
     insert/2,
     insert/3,
     update/4,
     delete/3,
     select/3,
+
     columns/2,
     column_names/2,
     update_sequence/3,
@@ -123,19 +128,19 @@ transaction1(Function, #context{dbc=undefined} = Context) ->
             C = get_connection(Context),
             Context1 = Context#context{dbc=C},
             Result = try
-                        case DbDriver:squery(C, "BEGIN") of
+                        case DbDriver:squery(C, "BEGIN", ?TIMEOUT) of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorBegin -> throw(ErrorBegin)
                         end,
                         R = Function(Context1),
-                        case DbDriver:squery(C, "COMMIT") of
+                        case DbDriver:squery(C, "COMMIT", ?TIMEOUT) of
                             {ok, [], []} -> ok;
                             {error, _} = ErrorCommit -> throw(ErrorCommit)
                         end,
                         R
                      catch
                         _:Why ->
-                            DbDriver:squery(C, "ROLLBACK"),
+                            DbDriver:squery(C, "ROLLBACK", ?TIMEOUT),
                             {rollback, {Why, erlang:get_stacktrace()}}
                      end,
             return_connection(Context, C),
@@ -153,13 +158,6 @@ transaction_clear(#context{dbc=undefined} = Context) ->
     Context;
 transaction_clear(Context) ->
     Context#context{dbc=undefined}.
-
-
-%% @doc Simple get/set functions for db property lists
-set(Key, Props, Value) ->
-    lists:keystore(Key, 1, Props, {Key, Value}).
-get(Key, Props) ->
-    proplists:get_value(Key, Props).
 
 
 %% @doc Check if we have database connection
@@ -323,6 +321,18 @@ q_row(Sql, Args, Context) ->
         [Row|_] -> Row;
         [] -> undefined
     end.
+
+
+squery(Sql, Context) ->
+    squery(Sql, Context, ?TIMEOUT).
+
+squery(Sql, Context, Timeout) when is_integer(Timeout) ->
+    F = fun(C) when C =:= none -> {error, noresult};
+           (C) ->
+                DbDriver = z_context:db_driver(Context),
+                DbDriver:squery(C, Sql, Timeout)
+        end,
+    with_connection(F, Context).
 
 
 equery(Sql, Context) ->
