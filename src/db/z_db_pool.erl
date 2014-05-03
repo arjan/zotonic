@@ -26,6 +26,7 @@
 -export([
          child_spec/2,
          get_database_options/1,
+         test_connection/1,
          db_pool_name/1,
          db_driver/1,
          get_connection/1,
@@ -43,6 +44,11 @@ db_driver(Context=#context{}) ->
         undefined -> ?DEFAULT_DB_DRIVER;
         Driver -> Driver
     end.
+
+%% @doc Perform a connect to test whether the database is working.
+test_connection(Context) ->
+    DbDriver = db_driver(Context),
+    DbDriver:test_connection(get_database_options(Context)).
 
 
 get_database_options(Context) ->

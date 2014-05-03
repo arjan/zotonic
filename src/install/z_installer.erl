@@ -33,36 +33,44 @@
 %% @spec start_link(SiteProps) -> {ok,Pid} | ignore | {error,Error}
 %% @doc Install zotonic on the databases in the PoolOpts, skips when already installed.
 start_link(SiteProps) when is_list(SiteProps) ->
-    install_check(SiteProps),
-    ignore.
+    install_check(SiteProps).
 
 install_check(SiteProps) ->
     %% Check if the config table exists, if so then assume that all is ok
     Context = z_context:new(proplists:get_value(host, SiteProps)),
     case z_db:has_connection(Context) of
         true ->
-            Options0 = z_db_pool:get_database_options(Context),
-            Options = lists:filter(fun({dbpassword,_}) -> false; (_) -> true end, Options0),
-            case z_db:table_exists(config, Context) of
-                false ->
-                    %% Install database
-                    lager:warning("~p: Installing database with db options: ~p", [z_context:site(Context), Options]),
-                    z_install:install(Context),
-                    lager:warning("okay: ~p", [okay]);
-                true ->
-                    %% Normal startup, do upgrade / check
-                    ok = z_db:transaction(
-                           fun(Context1) ->
-                                   C = z_db_pgsql:get_raw_connection(Context1),
-                                   Database = proplists:get_value(dbdatabase, Options),
-                                   Schema = proplists:get_value(dbschema, Options),
-                                   ok = upgrade(C, Database, Schema),
-                                   ok = sanity_check(C, Database, Schema)
-                           end,
-                           Context)
+            case z_db_pool:test_connection(Context) of
+                ok ->
+                    Options0 = z_db_pool:get_database_options(Context),
+                    Options = lists:filter(fun({dbpassword,_}) -> false; (_) -> true end, Options0),
+                    case z_db:table_exists(config, Context) of
+                        false ->
+                            %% Install database
+                            lager:warning("~p: Installing database with db options: ~p", [z_context:site(Context), Options]),
+                            z_install:install(Context),
+                            lager:warning("okay: ~p", [okay]),
+                            ignore;
+                        true ->
+                            %% Normal startup, do upgrade / check
+                            ok = z_db:transaction(
+                                   fun(Context1) ->
+                                           C = z_db_pgsql:get_raw_connection(Context1),
+                                           Database = proplists:get_value(dbdatabase, Options),
+                                           Schema = proplists:get_value(dbschema, Options),
+                                           ok = upgrade(C, Database, Schema),
+                                           ok = sanity_check(C, Database, Schema)
+                                   end,
+                                   Context),
+                            ignore
+                    end;
+                {error, Reason} ->
+                    lager:warning("~p: Database connection failure!", [z_context:site (Context)]),
+                    lager:warning("~p", [Reason]),
+                    stop
             end;
         false ->
-            ok
+            ignore
     end.
 
 has_table(C, Table, Database, Schema) ->    

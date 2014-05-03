@@ -89,7 +89,12 @@ init(Args) ->
 
 
 handle_call(Cmd, _From, #state{conn=undefined}=State) ->
-    handle_call(Cmd, _From, connect(State));
+    case connect(State) of
+        {ok, Conn} ->
+            handle_call(Cmd, _From, State#state{conn=Conn});
+        {error, _} = E ->
+            {reply, E, State}
+    end;
 
 handle_call({squery, Sql}, _From, #state{conn=Conn}=State) ->
     {reply, decode_reply(pgsql:squery(Conn, Sql)), State, ?IDLE_TIMEOUT};
@@ -106,6 +111,7 @@ handle_call(_Request, _From, State) ->
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
+
 
 handle_info(timeout, State) ->
     {noreply, disconnect(State)};
@@ -126,6 +132,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% Helper functions
 %%
 
+connect(#state{conn_args=Args}) ->
+    connect(Args);
 connect(Args) when is_list(Args) ->
     Hostname = get_arg(dbhost, Args),
     Port = get_arg(dbport, Args),
@@ -145,13 +153,6 @@ connect(Args) when is_list(Args) ->
             end;
         {error, _} = E ->
             E
-    end;
-connect(State=#state{conn_args=Args}) ->
-    case connect(Args) of
-        {ok, Conn} ->
-            State#state{conn=Conn};
-        {error, _} = E ->
-            throw(E)
     end.
 
 disconnect(State) ->
