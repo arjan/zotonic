@@ -4,7 +4,7 @@
 %%
 %% @doc Interface to database, uses database definition from Context
 
-%% Copyright 2009 Marc Worrell
+%% Copyright 2009-2014 Marc Worrell
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@
 %% limitations under the License.
 
 -module(z_db).
--author("Marc Worrell <marc@worrell.nl").
+-author("Marc Worrell <marc@worrell.nl>").
+-author("Arjan Scherpenisse <arjan@scherpenisse.net>").
 
 -define(TIMEOUT, 5000).
 
@@ -217,16 +218,6 @@ assoc_props_row(Sql, Parameters, Context) ->
         [Row|_] -> Row;
         [] -> undefined
     end.
-    
-
-get_parameter(Parameter, Context) ->
-    with_connection(
-      fun(C) ->
-              DbDriver = z_context:db_driver(Context),
-              {ok, Result} = DbDriver:get_parameter(C, z_convert:to_binary(Parameter)),
-              Result
-      end,
-      Context).
     
 
 %% @doc Return property lists of the results of a query on the database in the Context
