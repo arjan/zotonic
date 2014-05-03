@@ -231,6 +231,9 @@
 -define(LOG(Msg, Args), error_logger:info_msg(Msg, Args)).
 -define(ERROR(Msg, Args), error_logger:error_msg("~p:~p "++Msg, [?MODULE, ?LINE|Args])).
 
+-define(STACKTRACE, erlang:display(try throw(a) of _ -> a catch _:_ -> erlang:get_stacktrace() end)).
+
+
 -define(zDebug(Msg, Context), z:debug(Msg, [{module, ?MODULE}, {line, ?LINE}], Context)).
 -define(zInfo(Msg, Context), z:info(Msg, [{module, ?MODULE}, {line, ?LINE}], Context)).
 -define(zWarning(Msg, Context), z:warning(Msg, [{module, ?MODULE}, {line, ?LINE}], Context)).
