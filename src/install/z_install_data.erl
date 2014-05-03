@@ -32,13 +32,14 @@
 
 %% @doc Insert boot data into the database.
 %% @spec install(Host::atom(), Connection) -> ok
-install(Host, C) ->
-    ?DEBUG({Host, "Install start."}),
-    ok = install_category(C),
-    ok = install_rsc(C),
-    ok = install_identity(C),
-    ok = install_predicate(C),
-    ?DEBUG({Host, "Install done."}),
+install(Host, Context) ->
+    lager:info("~p: Install start.", [Host]),
+    ok = install_category(Context),
+    ok = install_rsc(Context),
+    ok = install_identity(Context),
+    ok = install_predicate(Context),
+    z_db:equery("SELECT setval('rsc_id_seq', m) FROM (select 1 + max(id) as m from rsc) sub", Context),
+    lager:info("~p: Install done.", [Host]),
     ok.
 
 %% @doc Install all modules for the site.
@@ -129,7 +130,7 @@ get_skeleton_modules(_) ->
 
 
 install_category(C) ->
-    ?DEBUG("Inserting categories"),
+    lager:info("Inserting categories"),
     %% The egg has to lay a fk-checked chicken here, so the insertion order is sensitive.
 
     %% 1. Insert the category "category" and "meta"
@@ -208,7 +209,7 @@ install_category(C) ->
 %% @doc Install some initial resources, most important is the system administrator
 %% @todo Add the hostname to the uri
 install_rsc(C) ->
-    ?DEBUG("Inserting base resources (admin, etc.)"),
+    lager:info("Inserting base resources (admin, etc.)"),
     Rsc = [
         % id  vsfr  cat   protect name,         props
         [   1,  0,  102,  true,    "administrator",   ?DB_PROPS([{title,<<"Site Administrator">>}]) ]
@@ -225,11 +226,11 @@ install_rsc(C) ->
 
 %% @doc Install the admin user as an user.  Uses the hard coded password "admin" when no password defined in the environment.
 install_identity(C) ->
-    ?DEBUG("Inserting username for the admin"),
+    lager:info("Inserting username for the admin"),
     Hash = m_identity:hash([]),
     {ok, 1} = z_db:equery("
         insert into identity (rsc_id, type, key, is_unique, propb)
-        values (1, 'username_pw', 'admin', true, $1)", [Hash], C),
+        values (1, 'username_pw', 'admin', true, $1)", [{term, Hash}], C),
     ok.
     
 
@@ -237,7 +238,7 @@ install_identity(C) ->
 %% See http://dublincore.org/documents/dcmi-terms/
 %% @todo Extend and check this list.  Add allowed from/to categories.
 install_predicate(C) ->
-    ?DEBUG("Inserting predicates"),
+    lager:info("Inserting predicates"),
     Preds = [
         % id   protect name       uri                                                  props
         [ 300, true,   "about",    "http://www.w3.org/1999/02/22-rdf-syntax-ns#about",  ?DB_PROPS([{reversed, false},{title, {trans, [{en,"About"},    {nl,"Over"}]}}])],
@@ -249,7 +250,7 @@ install_predicate(C) ->
 		[ 310, true,   "haspart",  "http://purl.org/dc/terms/hasPart",					?DB_PROPS([{reversed, false},{title, {trans, [{en,"Contains"}, {nl,"Bevat"}]}}])]
     ],
 
-    {ok, CatId}   = z_db:squery1("select id from rsc where name = 'predicate'", C),
+    CatId   = z_db:q1("select id from rsc where name = 'predicate'", C),
     
     [ {ok,1} = z_db:equery("
             insert into rsc (id, visible_for, is_protected, name, uri, props, category_id, is_published, creator_id, modifier_id)
@@ -258,26 +259,26 @@ install_predicate(C) ->
 %    pgsql:reset_id(C, "rsc"),
 
     ObjSubj = [
-        {300, true,  104}, %  text   -> about     -> _
-        {301, false, 102}, %  _      -> author    -> person
-        {304, false, 110}, %  _      -> depiction -> image
+        [300, true,  104], %  text   -> about     -> _
+        [301, false, 102], %  _      -> author    -> person
+        [304, false, 110], %  _      -> depiction -> image
 
-        {308, true,  104}, %  text     -> subject   -> _
-        {308, true,  102}, %  person   -> subject   -> _
-        {308, true,  119}, %  location -> subject   -> _
-        {308, true,  108}, %  event    -> subject   -> _
-        {308, true,  103}, %  artifact -> subject   -> _
-        {308, true,  110}, %  media    -> subject   -> _
-        {308, true,  114}, %  collection -> subject   -> _
-        {308, false, 123}, %  _      -> subject   -> keyword
+        [308, true,  104], %  text     -> subject   -> _
+        [308, true,  102], %  person   -> subject   -> _
+        [308, true,  119], %  location -> subject   -> _
+        [308, true,  108], %  event    -> subject   -> _
+        [308, true,  103], %  artifact -> subject   -> _
+        [308, true,  110], %  media    -> subject   -> _
+        [308, true,  114], %  collection -> subject   -> _
+        [308, false, 123], %  _      -> subject   -> keyword
 
-        {309, true,  102}, %  person   -> document -> _
-        {309, true,  103}, %  artifact -> document -> _
-        {309, true,  104}, %  text     -> document -> _
-        {309, true,  119}, %  location -> document -> _
-        {309, false, 114}, %  _        -> document -> media
+        [309, true,  102], %  person   -> document -> _
+        [309, true,  103], %  artifact -> document -> _
+        [309, true,  104], %  text     -> document -> _
+        [309, true,  119], %  location -> document -> _
+        [309, false, 114], %  _        -> document -> media
 
-        {310, true,  120}  %  collection -> haspart -> _
+        [310, true,  120]  %  collection -> haspart -> _
     ],
     
     [ {ok, 1} = z_db:equery("
@@ -289,7 +290,7 @@ install_predicate(C) ->
 %% @doc Enumerate all categories so that their left, right, level en nr are set correctly
 %% @spec enumerate_categories(Connection) -> ok
 enumerate_categories(C) ->
-    ?DEBUG("Sorting the category hierarchy"),
+    lager:info("Sorting the category hierarchy"),
     {ok, _, CatTuples} = z_db:equery("select id, parent_id, seq from category order by seq, id", C),
     Enums = m_category:enumerate(CatTuples),
     [

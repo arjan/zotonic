@@ -24,6 +24,8 @@
 -behaviour(poolboy_worker).
 -behaviour(z_db_worker).
 
+-include("zotonic.hrl").
+
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
@@ -69,9 +71,12 @@ equery(Worker, Sql, Parameters, Timeout) ->
     gen_server:call(Worker, {equery, Sql, Parameters}, Timeout).
 
 
-%% This function should not be used but currently is required by the install / upgrade routines.
-get_raw_connection(Worker) ->
+%% This function should not be used but currently is required by the
+%% install / upgrade routines. Can only be called from inside a
+%% z_db:transaction/2.
+get_raw_connection(#context{dbc=Worker}) when Worker =/= undefined ->
     gen_server:call(Worker, get_raw_connection).
+
 
 %%
 %% gen_server callbacks
