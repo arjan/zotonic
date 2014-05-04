@@ -166,8 +166,7 @@ check_nonce1(CKey, TK, TS, Nonce, Context) ->
 
 
 generate_key() ->
-    base64:encode_to_string(crypto:sha(crypto:rand_bytes(100))).
-    %%lists:flatten([io_lib:format("~2.16.0b",[N])||N<-binary_to_list(crypto:sha(crypto:rand_bytes(100)))]).
+    base64:encode_to_string(crypto:hash(sha, crypto:rand_bytes(100))).
 
 
 %%
