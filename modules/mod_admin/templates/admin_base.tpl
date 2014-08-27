@@ -9,9 +9,10 @@
         <meta name="author" content="Arjan Scherpenisse" />
 
         {% lib
-                "css/bootstrap-admin.css"
-                "css/bootstrap-admin-responsive.css"
+            "admin-bootstrap3/css/bootstrap.min.css"
+        %}
 
+        {% lib
                 "css/jquery-ui.datepicker.css"
                 "css/jquery.timepicker.css"
                 "css/zp-menuedit.css"
