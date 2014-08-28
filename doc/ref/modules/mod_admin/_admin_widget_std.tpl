@@ -24,7 +24,7 @@
 {% block widget_content %}
     {% with m.rsc[id] as r %}
 	<fieldset class="admin-form">
-	    <div class="form-item clearfix">
+	    <div>
 		<label for="title">{_ Title _}</label>
 		<input class="form-control" id="title" type="text" name="title" value="{{ r.title }}" />
 	    </div>

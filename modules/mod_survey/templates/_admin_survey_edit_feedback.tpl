@@ -10,7 +10,7 @@
 	{% with m.rsc[id] as r %}
 	{% with r.blocks.survey_feedback as blk %}
 		<fieldset class="admin-form">
-			<div class="form-item clearfix">
+			<div>
 				{% if is_editable %}
 					<textarea rows="10" 
 					    id="block-{{ #s }}-body{{ lang_code_for_id }}" 

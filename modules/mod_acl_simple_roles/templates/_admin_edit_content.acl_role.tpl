@@ -71,7 +71,7 @@
 
         <h4>{_ File uploads _}</h4>
         <div class="form-group">
-            <div class="form-item clearfix">
+            <div>
                 <label for="field-file-upload-size">{_ Maximum allowed file size for uploads (in KB) _}</label>
                 <input class="form-control" id="field-file-upload-size" style="width: 100px" type="text" name="acl_file_upload_size" value="{{ acl.file_upload_size|default:4096|escape }}" />
                 {% validate id="field-file-upload-size" name="acl_file_upload_size" type={numericality} %}

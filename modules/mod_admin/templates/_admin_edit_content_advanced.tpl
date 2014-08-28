@@ -35,7 +35,7 @@
 
     {% if m.acl.use.mod_admin_config %}
 	{% if r.is_a.meta or not r.is_authoritative %}
-	    <div class="form-item clearfix">
+	    <div>
 		<label for="field-name">{_ Unique uri _}</label>
 		<input class="form-control" type="text" id="field-name" name="uri" value="{{ r.uri }}" {% if not is_editable %}disabled="disabled"{% endif %} />
 	    </div>
