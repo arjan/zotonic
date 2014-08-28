@@ -5,9 +5,8 @@
 {% block content %}
 
 {% with q.qpagelen|default:20 as qpagelen %}
-<form id="{{ #form }}" method="GET" action="{% url admin_overview_rsc qs=q.qs %}" class="form-horizontal">
-    <div class="pull-right">
-        <select class="form-control" id="{{ #pagelen }}" name="qpagelen" style="width: auto; margin-left: .75em">
+    <form id="{{ #form }}" method="GET" action="{% url admin_overview_rsc qs=q.qs %}" class="form-inline pull-right" style="margin-top: 18px">
+        <select class="form-control" id="{{ #pagelen }}" name="qpagelen">
             {% for pagelen_value,pagelen_label in [[10,"10"],[20,"20"],[50,"50"],[100,"100"],[200,"200"],[500,"500"]] %}
             <option value="{{ pagelen_value }}" {% ifequal pagelen_value qpagelen %}selected="selected" {% endifequal %}>
                 {{ pagelen_label }}
@@ -15,11 +14,8 @@
             {% endfor %}
         </select>
         {% wire type="change" id=#pagelen action={submit} %}
-    </div>
-    <div class="pull-right">
 	{% with q.qcat as qcat %}
         <div class="form-group">
-	    <label class="control-label" for="{{ #category }}">{_ Filter on category _}</label>
             <div>
 	        <select class="form-control" id="{{ #category }}" name="qcat">
 	            <option value="">{_ All Categories _}</option>
@@ -36,18 +32,18 @@
             </div>
         </div>
 	{% endwith %}
-    </div>
 
     <input type="hidden" name="qsort" value="{{ q.qsort }}" />
     <input type="hidden" name="qs" value="{{ q.qs }}" />
-    <h2>
+</form>
+
+<h2>
 	{_ Pages overview _}{% if q.qcat %}: {{ m.rsc[q.qcat].title }}{% endif %}{% if q.qs %}, 
 	{_ matching _} “{{ q.qs|escape }}”
 	{% button text=_"show all" class="btn btn-default btn-xs" action={redirect dispatch="admin_overview_rsc" qcat=q.qcat} %}
 	<input type="hidden" name="qs" value="{{ q.qs|escape }}" />
 	{% endif %}
-    </h2>
-</form>
+</h2>
 
 <div class="well">
     <a name="content-pager"></a>
