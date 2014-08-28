@@ -44,7 +44,7 @@
 {% block admin_edit_form_pre %}{% endblock %}
 
 {% wire id="rscform" type="submit" postback="rscform" %}
-<form id="rscform" method="post" action="postback" class="form-horizontal">
+<form id="rscform" method="post" action="postback" class="form">
 	<input type="hidden" name="id" value="{{ id }}" />
 
 	<div class="row">
