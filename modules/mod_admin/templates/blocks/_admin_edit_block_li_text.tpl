@@ -8,7 +8,7 @@
 {% block widget_content %}
 {% with m.rsc[id] as r %}
 <fieldset class="admin-form">
-	<div class="form-item clearfix">
+	<div>
 		{% if is_editable %}
 			<textarea rows="10" 
 			    id="block-{{name}}-body{{ lang_code_for_id }}" 
