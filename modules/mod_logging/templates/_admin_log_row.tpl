@@ -1,6 +1,6 @@
 {% with signal_props.log_id|default:id as id %}
 {% with m.log[id] as l %}
-<div class="alert alert-{{ l.type|default:"info" }}">
+<div class="alert alert-{{ l.type|default:"| class="alert alert-{{ l.type|default:"info" }}">
     <div class="pull-right">
         {% if l.user_id %}
         <a href="{% url admin_edit_rsc id=l.user_id %}">{{ m.rsc[l.user_id].title }}</a> @

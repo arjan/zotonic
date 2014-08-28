@@ -30,9 +30,9 @@
 
 		<div class="navbar navbar-fixed-top">
 
-			<div class="navbar-inner">
+			<div class="container">
 				<div class="container">
-				<a class="brand" href="/">{{ m.config.site.title.value|default:"Your Zotonic Site" }} {% if m.config.site.subtitle.value %}{% endif %}</a>
+				<a class="navbar-brand" href="/">{{ m.config.site.title.value|default:"Your Zotonic Site" }} {% if m.config.site.subtitle.value %}{% endif %}</a>
 					{# <span>{{ m.config.site.subtitle.value }}</span> #}
 
 					{% menu id=id %}
@@ -47,13 +47,13 @@
 				{% block content_area %}
 					{% block chapeau %}{% endblock %}
 
-					<div class="span8">
+					<div class="col-lg-8 col-md-8">
 						{% block content %}
 							<!-- The default content goes here. -->
 						{% endblock %}
 					</div>
 
-					<div id="sidebar" class="span4">
+					<div id="sidebar" class="col-lg-4 col-md-4">
 						{% block sidebar %}
 							{% include "_sidebar.tpl" %}
 						{% endblock %}
@@ -64,7 +64,7 @@
 			</div>
 
 			<div class="row">
-				<div class="span12" id="footer">
+				<div class="col-lg-12 col-md-12" id="footer">
 					<div class="pull-right">
 						<p class="footer-blog-title">{% include "_powered_by_zotonic.tpl" %}</p>
 					</div>

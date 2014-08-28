@@ -59,8 +59,8 @@
             </tr>
 
             <tr>
-	        <td class="span1">
-		    <select id="log_severity" name="severity" style="width: 95%">
+	        <td class="col-lg-1 col-md-1">
+		    <select class="form-control" id="log_severity" name="severity" style="width: 95%">
 		        <option value="0" {% if q.severity == '0' %}selected="selected"{% endif %}>{_ Fatal _}</option>
 		        <option value="1" {% if q.severity == '' or q.severity|is_undefined or q.severity == '1' %}selected="selected"{% endif %}>{_ Error _}</option>
 		        <option value="2" {% if q.severity == '2' %}selected="selected"{% endif %}>{_ Warning _}</option>
@@ -69,8 +69,8 @@
 		    </select>
 		    {% wire id="log_severity" type="change" action={submit target="log_filter"} %}
                 </td>
-                <td class="span1">
- 		    <select id="log_status" name="status" style="width: 95%">
+                <td class="col-lg-1 col-md-1">
+ 		    <select class="form-control" id="log_status" name="status" style="width: 95%">
  		        <option value="">{_ All _}</option>
  		        <option value="sending" {% if q.status == 'sending' %}selected="selected"{% endif %}>{_ Sending _}</option>
  		        <option value="sent" {% if q.status == 'sent' %}selected="selected"{% endif %}>{_ Sent _}</option>
@@ -81,27 +81,27 @@
  		    </select>
 		    {% wire id="log_status" type="change" action={submit target="log_filter"} %}
                 </td>
-	        <td class="span1">
-		    <input name="message_nr" type="text" style="width: 85%" value="{{ q.message_nr|escape }}" />
+	        <td class="col-lg-1 col-md-1">
+		    <input class="form-control" name="message_nr" type="text" style="width: 85%" value="{{ q.message_nr|escape }}" />
                 </td>
-	        <td class="span2">
-		    <input name="to" type="text" style="width: 85%" value="{{ q.to|escape }}" />
+	        <td class="col-lg-2 col-md-2">
+		    <input class="form-control" name="to" type="text" style="width: 85%" value="{{ q.to|escape }}" />
                 </td>
-	        <td class="span2">
- 		    <input name="from" type="text" style="width: 85%" value="{{ q.from|escape }}" />
+	        <td class="col-lg-2 col-md-2">
+ 		    <input class="form-control" name="from" type="text" style="width: 85%" value="{{ q.from|escape }}" />
                 </td>
-	        <td class="span1">
-		    <input name="content" type="text" style="width: 70%" value="{{ q.content|escape }}" />
+	        <td class="col-lg-1 col-md-1">
+		    <input class="form-control" name="content" type="text" style="width: 70%" value="{{ q.content|escape }}" />
                 </td>
-	        <td class="span1">
- 		    <input name="other" type="text" style="width: 70%" value="{{ q.other|escape }}" />
+	        <td class="col-lg-1 col-md-1">
+ 		    <input class="form-control" name="other" type="text" style="width: 70%" value="{{ q.other|escape }}" />
                 </td>
-	        <td class="span1">
-		    <input name="template" type="text" style="width: 85%" value="{{ q.template|escape }}" />
+	        <td class="col-lg-1 col-md-1">
+		    <input class="form-control" name="template" type="text" style="width: 85%" value="{{ q.template|escape }}" />
                 </td>
-	        <td class="span2">
-		    <button class="btn btn-primary btn-mini" type="submit">{_ Filter _}</button>
-		    <button class="btn btn-mini" id="filter_clear">{_ All _}</button>
+	        <td class="col-lg-2 col-md-2">
+		    <button class="btn btn-primary btn-xs" type="submit">{_ Filter _}</button>
+		    <button class="btn btn-default btn-xs" id="filter_clear">{_ All _}</button>
 		    {% wire id="filter_clear" 
 		        action={set_value selector="#log_filter input" value=""}
 		        action={set_value selector="#log_status" value=""}

@@ -6,29 +6,29 @@
 <form id="{{ #form }}" method="post" action="postback" class="form-horizontal">
 
 
-    <div class="control-group">
+    <div class="form-group">
         <label class="control-label" for="operation">{_ Operation _}</label>
-        <div class="controls">
+        <div class="radio">
 
-            <label class="radio">
+            <label>
                 <input type="radio" name="operation" value="union" checked>
                     {_ <em>Add</em> all recipients to this list that are on the target list _}
             </label>
-            <label class="radio">
+            <div class="radio"><label>
                 <input type="radio" name="operation" value="subtract">
                     {_ <em>Remove</em> all recipients from this list that are on the target list _}
-            </label>
-            <label class="radio">
+            </label></div>
+            <div class="radio"><label>
                 <input type="radio" name="operation" value="intersection">
                     {_ Only keep recipients on this list that appear <em>on both lists</em> _}
-            </label>
+            </label></div>
         </div>
     </div>
 
-    <div class="control-group">
+    <div class="form-group">
         <label class="control-label" for="operation">{_ Target mailing list _}</label>
-        <div class="controls">
-            <select name="list_id" id="list_id">
+        <div>
+            <select class="form-control" name="list_id" id="list_id">
                 <option value="">{_ Select... _}</option>
                 {% for id in m.search[{query cat=`mailinglist` pagelen=1000}] %}
                     <option value="{{ id }}">{{ id.title }}</option>
@@ -39,7 +39,7 @@
     </div>
 
     <div class="modal-footer">
-	    {% button class="btn" text=_"Cancel" action={dialog_close} tag="a" %}
+	    {% button class="btn btn-default" text=_"Cancel" action={dialog_close} tag="a" %}
 	    {% button class="btn btn-primary" text=_"Perform operation" %}
     </div>
 

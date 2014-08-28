@@ -12,52 +12,52 @@
             <div class="tab-pane active" id="{{ #tab }}-details">
 
                 {% if consumer %}
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-ckey" class="control-label">{_ Consumer key _}:</label>
-                    <div class="controls">
-                        <input type="text" id="zp-ckey" readonly value="{{ consumer.consumer_key }}" />
+                    <div>
+                        <input class="form-control" type="text" id="zp-ckey" readonly value="{{ consumer.consumer_key }}" />
                     </div>
                 </div>
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-csec" class="control-label">{_ Consumer secret _}:</label>
-                    <div class="controls">
-                        <input type="text" id="zp-csec" readonly value="{{ consumer.consumer_secret }}" />
+                    <div>
+                        <input class="form-control" type="text" id="zp-csec" readonly value="{{ consumer.consumer_secret }}" />
                     </div>
                 </div>
                 {% endif %}
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-title" class="control-label">{_ Application title _}:</label>
-                    <div class="controls">
-                        <input type="text" name="zp-title" id="zp-title" value="{{ consumer.application_title }}" />
+                    <div>
+                        <input class="form-control" type="text" name="zp-title" id="zp-title" value="{{ consumer.application_title }}" />
                     </div>
                 </div>
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-url" class="control-label">{_ Homepage _}:</label>
-                    <div class="controls">
-                        <input type="text" name="zp-url" id="zp-url" value="{{ consumer.application_uri }}" />
+                    <div>
+                        <input class="form-control" type="text" name="zp-url" id="zp-url" value="{{ consumer.application_uri }}" />
                     </div>
                 </div>
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-text" class="control-label">{_ Description _}:</label>
-                    <div class="controls">
-                        <textarea name="zp-text" id="zp-text">{{ consumer.application_descr }}</textarea>
+                    <div>
+                        <textarea class="form-control" name="zp-text" id="zp-text">{{ consumer.application_descr }}</textarea>
                     </div>
                 </div>
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="zp-callback" class="control-label">{_ Callback URL _}:</label>
-                    <div class="controls">
-                        <input type="text" name="zp-callback" id="zp-callback" value="{{ consumer.callback_uri }}" />
+                    <div>
+                        <input class="form-control" type="text" name="zp-callback" id="zp-callback" value="{{ consumer.callback_uri }}" />
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     {% if consumer.id %}
-                    {% button class="btn" action={dialog_close} text=_"Cancel" tag="a" %}
+                    {% button class="btn btn-default" action={dialog_close} text=_"Cancel" tag="a" %}
                     {% button class="btn btn-primary" type="submit" text=_"Update" %}
                     {% else %}
                     {_ When done, go to the authorization tab to set permissions. _}
@@ -86,7 +86,7 @@
                 {% endwith %}
 
                 <div class="modal-footer">
-                    {% button class="btn" action={dialog_close} text=_"Cancel" %}
+                    {% button class="btn btn-default" action={dialog_close} text=_"Cancel" %}
                     {% if consumer.id %}
                     {% button class="btn btn-primary" type="submit" text=_"Update" %}
                     {% else %}

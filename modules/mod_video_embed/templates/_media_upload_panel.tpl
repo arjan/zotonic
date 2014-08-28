@@ -12,34 +12,34 @@
 
     <form id="{{ #form }}" method="POST" action="postback" class="form-horizontal">
 	{% if not id %}
-	<div class="control-group">
+	<div class="form-group">
 	    <label class="control-label" for="{{ #title }}">{_ Media title _}</label>
-            <div class="controls">
-	        <input type="text" id="{{ #title }}" name="title" value="{{ title|escape }}" class="span4" />
+            <div>
+	        <input type="text" id="{{ #title }}" name="title" value="{{ title|escape }}" class="col-lg-4 col-md-4 form-control" />
 	        {% validate id=#title name="title" type={presence} %}
             </div>
 	</div>
 	{% endif %}
 
-	<div class="control-group">
+	<div class="form-group">
 	    <label class="control-label" for="{{ #service }}">{_ From site _}</label>
-            <div class="controls">
-	        <select id="{{ #service }}" name="video_embed_service" class="span4">
+            <div>
+	        <select id="{{ #service }}" name="video_embed_service" class="col-lg-4 col-md-4 form-control">
 		    {% include "_video_embed_service_options.tpl" service=medium.video_embed_service %}
                 </select>
             </div>
 	</div>
 	
-	<div class="control-group">
+	<div class="form-group">
 	    <label class="control-label" for="{{ #embed_code }}">{_ Embed code _}</label>
-            <div class="controls">
-	        <textarea id="{{ #embed_code }}" class="span4" name="video_embed_code" rows="10">{% if is_video_embed %}{{ medium.video_embed_code|escape }}{% endif %}</textarea>
+            <div>
+	        <textarea id="{{ #embed_code }}" class="col-lg-4 col-md-4 form-control" name="video_embed_code" rows="10">{% if is_video_embed %}{{ medium.video_embed_code|escape }}{% endif %}</textarea>
 	        {% validate id=#embed_code name="video_embed_code" type={presence} %}
             </div>
 	</div>
 	
 	<div class="modal-footer">
-	    {% button class="btn" action={dialog_close} text=_"Cancel" tag="a" %}
+	    {% button class="btn btn-default" action={dialog_close} text=_"Cancel" tag="a" %}
 	    <button class="btn btn-primary" type="submit">{% if id %}{_ Replace media item _}{% else %}{_ Make media item _}{% endif %}</button>
 	</div>
     </form>

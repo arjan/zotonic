@@ -7,7 +7,7 @@
 {% with q.qpagelen|default:20 as qpagelen %}
 <form id="{{ #form }}" method="GET" action="{% url admin_overview_rsc qs=q.qs %}" class="form-horizontal">
     <div class="pull-right">
-        <select id="{{ #pagelen }}" name="qpagelen" style="width: auto; margin-left: .75em">
+        <select class="form-control" id="{{ #pagelen }}" name="qpagelen" style="width: auto; margin-left: .75em">
             {% for pagelen_value,pagelen_label in [[10,"10"],[20,"20"],[50,"50"],[100,"100"],[200,"200"],[500,"500"]] %}
             <option value="{{ pagelen_value }}" {% ifequal pagelen_value qpagelen %}selected="selected" {% endifequal %}>
                 {{ pagelen_label }}
@@ -18,10 +18,10 @@
     </div>
     <div class="pull-right">
 	{% with q.qcat as qcat %}
-        <div class="control-group">
+        <div class="form-group">
 	    <label class="control-label" for="{{ #category }}">{_ Filter on category _}</label>
-            <div class="controls">
-	        <select id="{{ #category }}" name="qcat">
+            <div>
+	        <select class="form-control" id="{{ #category }}" name="qcat">
 	            <option value="">{_ All Categories _}</option>
 	            <option disabled="disabled"></option>
 	            {% for cat_id, level, indent, name in m.category.all_flat %}
@@ -43,7 +43,7 @@
     <h2>
 	{_ Pages overview _}{% if q.qcat %}: {{ m.rsc[q.qcat].title }}{% endif %}{% if q.qs %}, 
 	{_ matching _} “{{ q.qs|escape }}”
-	{% button text=_"show all" class="btn btn-mini" action={redirect dispatch="admin_overview_rsc" qcat=q.qcat} %}
+	{% button text=_"show all" class="btn btn-default btn-xs" action={redirect dispatch="admin_overview_rsc" qcat=q.qcat} %}
 	<input type="hidden" name="qs" value="{{ q.qs|escape }}" />
 	{% endif %}
     </h2>
@@ -64,8 +64,8 @@
 
     {% all include "_admin_make_page_buttons.tpl" %}
 
-    <a class="btn disabled" href="{% url admin_overview_rsc %}">{_ All pages _}</a>
-    <a class="btn" href="{% url admin_media %}">{_ All media _}</a>
+    <a class="btn btn-default disabled" href="{% url admin_overview_rsc %}">{_ All pages _}</a>
+    <a class="btn btn-default" href="{% url admin_media %}">{_ All media _}</a>
 </div>
 
 {% with m.search.paged[{query authoritative=1 cat=q.qcat text=q.qs page=q.page pagelen=qpagelen sort=q.qsort|default:"-modified"}] as result %}

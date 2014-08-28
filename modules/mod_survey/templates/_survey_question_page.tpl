@@ -9,7 +9,7 @@
 				<legend>{{ page_nr }}<span class="total">/{{ pages }}</span></legend> 
 			{% elseif id.survey_progress == 'bar' %}
 				<div class="progress">
-				  <div class="bar" style="width: {{ page_nr * 100 / pages }}%;"></div>
+				  <div class="progress-bar" style="width: {{ page_nr * 100 / pages }}%;"></div>
 				</div>
 			{% endif %}
 		{% endif %}
@@ -19,20 +19,20 @@
 		{% endfor %}
 	</fieldset>
 
-	<div class="alert alert-error z_invalid">
+	<div class="alert alert-danger z_invalid">
 		{_ Please fill in all the required fields. _}
 	</div>
 
 	<div class="form-actions">
 		{% if page_nr > 1 %}
-			<a id="{{ #back }}" href="#" class="btn">{_ Back _}</a>
+			<a id="{{ #back }}" href="#" class="btn btn-default">{_ Back _}</a>
 			{% wire id=#back 
 					postback={survey_back id=id page_nr=page_nr answers=answers history=history element_id=element_id|default:"survey-question"}
 					delegate="mod_survey"
 			%}
 		{% endif %}
 		{% if not id.is_a.poll %}
-			<a id="{{ #cancel }}" href="#" class="btn">{_ Stop _}</a>
+			<a id="{{ #cancel }}" href="#" class="btn btn-default">{_ Stop _}</a>
 			{% wire id=#cancel action={confirm text=_"Are you sure you want to stop?" ok=_"Stop" cancel=_"Continue" action={redirect id}} %}
 		{% endif %}
 		{% with questions|last as last_q %}

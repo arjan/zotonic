@@ -27,7 +27,7 @@
 
         <form method="post">
             <button type="submit" class="btn btn-primary">{_ Allow! _}</button>
-            <button type="reset" class="btn">{_ Disallow _}</button>
+            <button type="reset" class="btn btn-default">{_ Disallow _}</button>
         </form>
 
 	</div>

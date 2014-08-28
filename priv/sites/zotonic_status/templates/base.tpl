@@ -29,7 +29,7 @@
             {% endblock %}
 
             <div class="row">
-                <div class="span12" id="content-area">
+                <div class="col-lg-12 col-md-12" id="content-area">
 		    {% block content_area %}
 		    {% block content %}{% endblock %}
 		    {% block sidebar %}{% endblock %}
@@ -38,7 +38,7 @@
             </div>
 	    
             <div class="row">
-                <div class="span12" id="footer">
+                <div class="col-lg-12 col-md-12" id="footer">
 		    {% include "_footer.tpl" %}
                 </div>
             </div>

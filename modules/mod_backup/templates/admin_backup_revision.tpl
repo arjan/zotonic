@@ -46,10 +46,10 @@
 
 <div class="row">
 
-	<div class="span3">
+	<div class="col-lg-3 col-md-3">
 		<ul class="nav nav-list" id="revisions">
 		{% if id.exists %}
-			<li class="nav-header">
+			<li class="dropdown-header">
 				{_ Current _}
 			</li>
 			<li class="active">
@@ -61,7 +61,7 @@
 		{% endif %}
 		{% for rev in m.backup_revision.list[id] %}
 			{% if forloop.first %}
-			<li class="nav-header">
+			<li class="dropdown-header">
 				{_ Previous _}
 			</li>
 			{% endif %}
@@ -75,7 +75,7 @@
 		</ul>
 	</div>
 
-	<div class="span9">
+	<div class="col-lg-9 col-md-9">
 		<div id="page-diff" >
 			<p class="alert">
 				{_ Select one or two revisions from the list on the left. _}

@@ -41,7 +41,7 @@
         {% include "_admin_menu.tpl" %}
     {% endblock %}
 
-    <div class="container-fluid">
+    <div class="container">
         {% block content %}{% endblock %}
     </div>
 

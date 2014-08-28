@@ -28,33 +28,33 @@
             <div class="widget">
                 <h3 class="widget-header">{_ S3 Cloud Location and Credentials _}</h3>
                 <div class="widget-content">
-                    <div class="control-group">
+                    <div class="form-group">
                         <label for="app_id">{_ Base Url _}</label>
-                        <div class="controls">
+                        <div>
                             <input type="text" id="s3url" name="s3url" 
-                                   value="{{ m.config.mod_filestore.s3url.value|escape }}" class="span8"
+                                   value="{{ m.config.mod_filestore.s3url.value|escape }}" class="col-lg-8 col-md-8 form-control"
                                    placeholder="https://s.greenqloud.com/account-bucket/mysite"
                             />
                         </div>
                     </div>
                     
-                    <div class="control-group">
+                    <div class="form-group">
                         <label class="control-label" for="s3key">{_ API Key _}</label>
-                        <div class="controls">
-                            <input type="text" id="s3key" name="s3key" value="{{ m.config.mod_filestore.s3key.value|escape }}" class="span6" />
+                        <div>
+                            <input type="text" id="s3key" name="s3key" value="{{ m.config.mod_filestore.s3key.value|escape }}" class="col-lg-6 col-md-6 form-control" />
                         </div>
                     </div>
                     
-                    <div class="control-group">
+                    <div class="form-group">
                         <label class="control-label" for="s3secret">{_ API Secret _}</label>
-                        <div class="controls">
-                            <input type="text" id="s3secret" name="s3secret" value="{{ m.config.mod_filestore.s3secret.value|escape }}" class="span6" />
+                        <div>
+                            <input type="text" id="s3secret" name="s3secret" value="{{ m.config.mod_filestore.s3secret.value|escape }}" class="col-lg-6 col-md-6 form-control" />
                         </div>
                     </div>
 
-                    <div class="control-group">
-                        <div class="controls">
-                            <label class="checkbox" for="is_upload_enabled">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label for="is_upload_enabled">
                                 <input type="checkbox" id="is_upload_enabled" name="is_upload_enabled" {% if m.config.mod_filestore.is_upload_enabled.value == "true" %}checked{% endif %} />
                                 {_ Upload new media files to the cloud by default _}
                             </label>
@@ -64,10 +64,10 @@
                     <p class="help-block">{_ Before the settings are saved they will be checked by uploading (and removing) a small file. _}</p>
 
                     <p id="s3ok" class="alert alert-success" style="display:none">{_ Settings are working fine and are saved. _}</p>
-                    <p id="s3error" class="alert alert-error" style="display:none">{_ Could not access the service, double check your settings and try again. _}</p>
+                    <p id="s3error" class="alert alert-danger" style="display:none">{_ Could not access the service, double check your settings and try again. _}</p>
 
-                    <div class="control-group">
-                        <div class="controls">
+                    <div class="form-group">
+                        <div>
                             <button class="btn btn-primary" type="submit">{_ Save Settings _}</button>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                 %}
                 <form name="admin_filestore_queue" id="admin_filestore_queue" method="POST" action="postback">
 
-                    <div class="row-fluid">
+                    <div class="row">
                         {% with m.filestore.stats as stats %}
                         <div class="pull-left">
                             <table class="table condensed" style="width: auto">
@@ -145,14 +145,14 @@
                         {_ This will queue the files for later asynchronous upload. _}
                     </p>
 
-                    <p id="s3error-queue" class="alert alert-error" style="display:none">{_ Could not access the service, double check your settings and try again. _}</p>
+                    <p id="s3error-queue" class="alert alert-danger" style="display:none">{_ Could not access the service, double check your settings and try again. _}</p>
                     <p id="s3ok-queue" class="alert alert-success" style="display:none">{_ All files has been queued, uploads will be done in the background within 10 minutes. _}</p>
                     <p id="s3ok-queue-local" class="alert alert-success" style="display:none">{_ All cloud files have been queued for download. _}</p>
 
-                    <div class="control-group">
-                        <div class="controls">
+                    <div class="form-group">
+                        <div>
                             <button name="queue-all" type="submit" class="btn btn-danger">{_ Move all local files to S3 _}</button>
-                            <button name="queue-local" type="submit" class="btn">{_ Move all S3 files to local _}</button>
+                            <button name="queue-local" type="submit" class="btn btn-default">{_ Move all S3 files to local _}</button>
                         </div>
                     </div>
                 </form>
@@ -160,7 +160,7 @@
 
         </div>
     {% else %}
-        <p class="alert alert-error">
+        <p class="alert alert-danger">
             {_ You are not allowed to change these settings. _}
         </p>
     {% endif %}

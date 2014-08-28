@@ -28,7 +28,7 @@
 {% block navbar %}
 	{% include "_navbar.tpl" %}
 {% endblock %}
-<div class="container-fluid">
+<div class="container">
 	{% block content_area %}
 		<div class="content" {% include "_language_attrs.tpl" language=z_language %}>
 		{% block content %}{% endblock %}

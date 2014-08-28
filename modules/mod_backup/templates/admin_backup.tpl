@@ -13,13 +13,13 @@
     {% if is_editable %}
     <div class="well">
         {# TODO: make this a mod_admin_config scomp/include #}
-        <label class="checkbox">
+        <div class="checkbox"><label>
             <input id="backup_panel" name="backup_panel" type="checkbox" value="1" {% if m.config.mod_backup.admin_panel.value %}checked="checked"{% endif %} /> {_ Show import/export panel in the admin. _}
-        </label>
+        </label></div>
         {% wire id="backup_panel" postback=`config_backup_panel` %}
-        <label class="checkbox">
+        <div class="checkbox"><label>
             <input id="backup_daily" name="backup_daily" type="checkbox" value="1" {% if m.config.mod_backup.daily_dump.value %}checked="checked"{% endif %}/> {_ Make a daily backup of the database and uploaded files. _}
-        </label>
+        </label></div>
         {% wire id="backup_daily" postback=`config_backup_daily` %}
     </div>
     {% endif %}
@@ -33,7 +33,7 @@
         {% button class="btn btn-primary" text=_"Start backup now" action={backup_start} %}
     </div>
     {% elseif not backup_config.ok %}
-    <div class="alert alert-error">
+    <div class="alert alert-danger">
         <strong>{_ Warning: _}</strong> {_ Your backup is not correctly configured. The backup module will not work until the problem(s) below have been resolved: _}
         {% if not backup_config.db_dump %}<br/><strong>{_ The "pg_dump" command was not found in the path. Set the "pg_dump" config key to the path to pg_dump and return to this page. _}</strong>{% endif %}
         {% if not backup_config.archive %}<br/><strong>{_ The "tar" command was not found in the path. Set the "tar" config key to the path to pg_dump and return to this page. _}</strong>{% endif %}
@@ -53,7 +53,7 @@
 
 
 <div class="row">
-    <div class="span8">
+    <div class="col-lg-8 col-md-8">
         <h3>{_ Backups _}</h3>
         <hr />
 
@@ -72,8 +72,8 @@
                             {% if in_progress %}
                             <span class="label label-info">{_ this backup is in progress _}</span>
                             {% else %}
-                            <a class="btn btn-mini" href="{% url backup_download star=[id, ".sql"] %}">{_ download database _}</a>
-                            <a class="btn btn-mini" href="{% url backup_download star=[id, ".tar.gz"] %}">{_ download files _}</a>
+                            <a class="btn btn-default btn-xs" href="{% url backup_download star=[id, ".sql"] %}">{_ download database _}</a>
+                            <a class="btn btn-default btn-xs" href="{% url backup_download star=[id, ".tar.gz"] %}">{_ download files _}</a>
                             {% endif %}
                         </div>
                         {{ date|date:"M d Y, H:i" }}
