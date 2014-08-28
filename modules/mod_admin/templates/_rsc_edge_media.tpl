@@ -6,7 +6,7 @@
         {% image object_id mediaclass="admin-rsc-edge-media" %}
 
         <div class="pull-right">
-            <button id="{{ #unlink.object_id }}" class="btn btn-mini" title="{_ Disconnect _} {{title}}."><i class="icon-remove"></i></button>
+            <button id="{{ #unlink.object_id }}" class="btn btn-default btn-xs" title="{_ Disconnect _} {{title}}."><i class="glyphicon glyphicon-remove"></i></button>
         </div>
         <div class="caption">
             {% with m.rsc[object_id].title|striptags|default:_"untitled" as title %}

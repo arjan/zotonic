@@ -26,7 +26,7 @@
 	<fieldset class="admin-form">
 	    <div class="form-item clearfix">
 		<label for="title">{_ Title _}</label>
-		<input id="title" type="text" name="title" value="{{ r.title }}" />
+		<input class="form-control" id="title" type="text" name="title" value="{{ r.title }}" />
 	    </div>
 	</fieldset>
     {% endwith %}

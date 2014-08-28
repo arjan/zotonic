@@ -17,38 +17,38 @@
             <h3 class="widget-header">Facebook</h3>
             <div class="widget-content">
 
-                <div class="control-group">
+                <div class="form-group">
                     <label for="app_id">{_ App ID. _}</label>
-                    <div class="controls">
-                        <input type="text" id="appid" name="appid" value="{{ m.config.mod_facebook.appid.value|escape }}" class="span6" />
+                    <div>
+                        <input type="text" id="appid" name="appid" value="{{ m.config.mod_facebook.appid.value|escape }}" class="col-lg-6 col-md-6 form-control" />
                     </div>
                 </div>
                 
-                <div class="control-group">
+                <div class="form-group">
                     <label class="control-label" for="appsecret">{_ App Secret _}</label>
-                    <div class="controls">
-                        <input type="text" id="appsecret" name="appsecret" value="{{ m.config.mod_facebook.appsecret.value|escape }}" class="span6" />
+                    <div>
+                        <input type="text" id="appsecret" name="appsecret" value="{{ m.config.mod_facebook.appsecret.value|escape }}" class="col-lg-6 col-md-6 form-control" />
                     </div>
                 </div>
                 
-                <div class="control-group">
+                <div class="form-group">
                     <label class="control-label" for="scope">{_ Scope _}</label>
-                    <div class="controls">
-                        <input type="text" id="scope" name="scope" value="{{ m.config.mod_facebook.scope.value|default:'email'|escape }}" class="span6" />
+                    <div>
+                        <input type="text" id="scope" name="scope" value="{{ m.config.mod_facebook.scope.value|default:'email'|escape }}" class="col-lg-6 col-md-6 form-control" />
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <div class="controls">
-                        <label class="checkbox" for="useauth">
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label for="useauth">
                             <input type="checkbox" id="useauth" name="useauth" {% if m.config.mod_facebook.useauth.value %}checked="checked"{% endif %} value="1" />
                             {_ Use Facebook authentication _}
                         </label>
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <div class="controls">
+                <div class="form-group">
+                    <div>
                         <button class="btn btn-primary" type="submit">{_ Save Facebook Settings _}</button>
                     </div>
                 </div>

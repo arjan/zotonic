@@ -10,8 +10,8 @@
 
     <p>{_ Here you can set the default localization configurations. _}</p>
 
-    <div class="row-fluid">
-        <div class="widget span6">
+    <div class="row">
+        <div class="widget col-lg-6 col-md-6">
             <h3 class="widget-header">{_ Timezone _}</h3>
             <div class="widget-content">
                 {% include "_admin_l10n_config.tpl" %}

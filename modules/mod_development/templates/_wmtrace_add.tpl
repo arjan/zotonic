@@ -8,7 +8,7 @@
 
 		<div class="form-item clearfix">
 			<label for="{{ #resource }}">Resource</label>
-			<select id="{{ #resource }}" name="resource">
+			<select class="form-control" id="{{ #resource }}" name="resource">
 			{% for res in resources %}
 				<option value="{{res}}">
 					{{ indent }}{{ res }}
