@@ -69,7 +69,7 @@
         </tbody>
     </table>
 
-    {% pager result=result dispatch="admin_user" qargs %}
+    {% pager result=result dispatch="admin_user" qargs hide_single_page %}
 
     {% endwith %}
     {% endwith %}
