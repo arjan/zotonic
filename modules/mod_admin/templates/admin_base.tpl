@@ -42,7 +42,7 @@
         {% include "_admin_menu.tpl" %}
     {% endblock %}
 
-    <div class="container">
+    <div class="admin-container">
         {% block content %}{% endblock %}
     </div>
 
