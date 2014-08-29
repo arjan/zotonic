@@ -1,8 +1,8 @@
 {% javascript %}
 setTimeout(function() {
 	$({{ m.session['admin_widgets']|to_json }}).each(function() {
-		for (var k in this) {
-			$("#"+k).adminwidget("setVisible", this[k] == "true", true);
+	for (var k in this) {
+			$("#"+k).adminwidget("setVisible", this[k], true);
 		}});
 	}, 1);
 	
