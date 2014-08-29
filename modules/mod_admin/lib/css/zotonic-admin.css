@@ -656,3 +656,6 @@ div.tab-content {
 .modal-dialog .modal-header h3 {
   margin-top: 15px;
 }
+.form-field-error {
+  background: #ffeeee;
+}
