@@ -74,7 +74,7 @@
 	    {% endfor %}
         </tbody>
     </table>
-    {% pager result=result dispatch="admin_media" qargs %}
+    {% pager result=result dispatch="admin_media" qargs hide_single_page %}
 
     {% endwith %}
 </div>

@@ -7,11 +7,9 @@
 
 	    <span class="btns">
 		    <span class="btn-group">
-		        <a href="#" class="btn btn-default menu-edit">{_ Edit _}</a>
-		    </span>
+		        <a href="#" class="btn btn-default btn-xs menu-edit">{_ Edit _}</a>
 
-		    <span class="btn-group">
-		        <a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-cog"></i> <span class="caret"></span></a>
+		        <a href="#" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-cog"></i> <span class="caret"></span></a>
 				<ul class="dropdown-menu">
 				    <li><a href="#" data-where="before">&uarr; {_ Add before _}</a></li>
 				    <li><a href="#" data-where="below">&rarr; {_ Add below _}</a></li>

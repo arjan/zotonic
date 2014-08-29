@@ -5,7 +5,7 @@
 {% block content %}
 
     {% with q.qpagelen|default:20 as qpagelen %}
-        <form id="{{ #form }}" method="GET" action="{% url admin_overview_rsc qs=q.qs %}" class="form-inline pull-right" style="margin-top: 18px">
+        <form id="{{ #form }}" method="GET" action="{% url admin_overview_rsc qs=q.qs %}" class="form-inline pull-right" >
 	        <span class="control-label" for="{{ #category }}">{_ Filter on category _}</span>
 	        {% with q.qcat as qcat %}
 	            <select class="form-control" id="{{ #category }}" name="qcat">
@@ -64,7 +64,7 @@
 
         {% with m.search.paged[{query authoritative=1 cat=q.qcat text=q.qs page=q.page pagelen=qpagelen sort=q.qsort|default:"-modified"}] as result %}
 	        {% catinclude "_admin_overview_list.tpl" m.category[q.qcat].is_a result=result %}
-	        {% pager result=result dispatch="admin_overview_rsc" qargs hide_single_page=1 %}
+	        {% pager result=result dispatch="admin_overview_rsc" qargs hide_single_page %}
         {% endwith %}
     {% endwith %}
 
