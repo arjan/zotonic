@@ -8,12 +8,15 @@
 	<style type="text/css">
 		#revisions .active a.first {
 			background-color: green;
+			color: white;
 		}
 		#revisions .active a.second {
 			background-color: red;
+			color: white;
 		}
 		.diff-omitted {
 			color: #999;
+			color: white;
 		}
 		ins {
 			color: green;
