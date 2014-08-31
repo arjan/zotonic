@@ -10,7 +10,7 @@
 	        {% include "_edit_media.tpl" id=id %}
         </div>
         {% if is_editable %}
-            <div class="clearfix">
+            <div class="form-group clearfix">
                 <div class="pull-right">
                     <a class="btn btn-default" id="{{ #connect }}" href="#connect"><i class="icon glyphicon glyphicon-camera"></i> {_ add media item _}</a>
                     {% wire id=#connect 

@@ -23,7 +23,7 @@
     </div>
     {% endif %}
 
-    <div class="save-buttons">
+    <div class="form-group clearfix">
         {% if id.is_a.image %}
             <input type="hidden" name="crop_center" id="crop_center" value="{{ id.crop_center }}" />
             <a href="#" id="crop-center-remove" class="btn btn-default">
@@ -45,7 +45,7 @@
     <p>
         {_ uploaded on _} {{ medium.created|date:"Y-m-d H:i:s" }}
     </p>
-    <div class="save-buttons">
+    <div class="form-group clearfix">
         <div class="pull-right">
             {% button   text=_"Replace this media item"
                 class="btn btn-primary"

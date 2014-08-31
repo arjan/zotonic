@@ -1,14 +1,14 @@
 /* Specific styles for Zotonic admin
-----------------------------------------------------------
+   ----------------------------------------------------------
 
 @package:	Zotonic admin CSS
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
- 
+
 http://www.apache.org/licenses/LICENSE-2.0
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,7 @@ limitations under the License.
 ---------------------------------------------------------- */
 
 /* LESS mixins
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 .gradient (@startColor: #eee, @endColor: white) {
 	background-color: @startColor;
@@ -33,7 +33,7 @@ limitations under the License.
 @baseFont: 13px;
 
 /* bootstrap structure
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 body {
     font-size: @baseFont;
@@ -50,7 +50,7 @@ body {
     &.wait {
         cursor: wait;
         .btn {
-        cursor: wait;
+            cursor: wait;
         }
     }
 }
@@ -75,7 +75,7 @@ hr {
 
 
 /* footer edit nav
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 #rsc-image {
     position: relative;
@@ -97,7 +97,7 @@ div.cropguide.vert {
 }
 
 /* footer edit nav
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 .navbar-fixed-save {
     opacity: 0;
@@ -142,7 +142,7 @@ div.cropguide.vert {
 }
 
 /* widget
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 
 div.widget {
@@ -155,7 +155,7 @@ div.widget {
     
     div.widget-content {
 
-        padding: 10px 8px;
+        margin: 10px 8px;
         
         & h1, & h2, & h3,  & h4, & h5, & h6 {
             margin: @baseMargin 0;
@@ -168,7 +168,15 @@ div.widget {
         > :last-child {
             margin-bottom: 0;
         }
+        .form-group:last-child {
+            padding-bottom: 10px;
+        }
 
+        &.nolang {
+            > .form-group:first-child {
+                padding-top: 10px;
+            }
+        }
 
         .rsc-item {
             overflow: hidden;
@@ -224,17 +232,12 @@ div.widget ul.nav-tabs li.active > a {
 
 
 /* admin forms
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 div.admin-form {
     & :last-child {
         margin-bottom: 0;
     }
-}
-
-div.save-buttons {
-    min-height: 36px;
-    margin-top: 18px;
 }
 
 div.form-group {
@@ -256,7 +259,7 @@ div.form-group {
 
 
 /* admin table
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 td.clickable,
 tr.clickable td {
@@ -406,14 +409,12 @@ input.do_timepicker {
    -------------------------------------------------------------- */
 
 ul.blocks {
-    border-top: 1px solid #e8e8e8;
-    border-bottom: 1px solid #e8e8e8;
-    padding: 30px 8px 0 8px;
+    padding: 0;
+    margin: 0;
 }
 ul.blocks > li {
     list-style-type: none;
     margin-left: 0;
-    margin-bottom: 32px;
 }
 ul.blocks > li > h3 {
     cursor: move;
@@ -436,8 +437,12 @@ ul.blocks li.block .widget {
     border-radius: 0 0 4px 4px;
 }
 .block-add-block {
-    margin-top: 6px;
+    margin-bottom: 12px;
 }
+.block-add-block .dropdown-menu {
+    top: auto;
+}
+
 fieldset.block-name {
     margin-top: 8px;
 }
@@ -457,7 +462,7 @@ ul.blocks .ui-sortable-placeholder {
 
 
 /* Connections
----------------------------------------------------------- */
+   ---------------------------------------------------------- */
 ul.connections-list {
     padding-bottom: 8px;
     min-height: 1em;
@@ -550,7 +555,7 @@ ul.suggestions-list li a:hover {
                 text-transform: lowercase;
                 line-height: 13px;
             }
-    
+            
             img {
                 margin-right: 4px;
             }
@@ -584,7 +589,7 @@ span.leader {
 
 
 /* tinyMce stuff
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 table.mceLayout, textarea.tinyMCE {
     width: 100% !important;
@@ -611,9 +616,9 @@ table.mceLayout, textarea.tinyMCE {
 	width: auto;
 }
 
-	.z-tinymce-media-options p {
-		margin: 0;
-	}
+.z-tinymce-media-options p {
+	margin: 0;
+}
 
 .wp_themeSkin .mceStatusbar div {
     width: 600px;
@@ -632,7 +637,7 @@ div.widget-content .mce-container, div.widget-content .mce-container *, div.widg
 
 
 /* maps
--------------------------------------------------------------- */
+   -------------------------------------------------------------- */
 
 .map-wrapper {
 	height: 300px;
@@ -690,7 +695,7 @@ body[dir=rtl] label {
 
 
 /* icon status
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 span.icon_status {
     width: 17px;
     height: 17px;
@@ -718,14 +723,14 @@ span.icon_status_starting {
 }
 
 /* sidebar
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 #sidebar-date-range .tab-content {
     overflow: visible;
 }
 
 /* scroll - keep the save buttons into view
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 
 #sidebar-publish-page .widget-content {
     display: block;
@@ -736,7 +741,7 @@ span.icon_status_starting {
 
 
 /* modal - fix for tab content getting scrollbars inside modal
---------------------------------------------------------- */
+   --------------------------------------------------------- */
 @media (min-width: 720px) {
     .modal-dialog {
         width: 700px;
@@ -748,7 +753,7 @@ div.modal div.tab-content {
 }
 
 div.tab-content {
-//    margin-top: 18px;
+    //    margin-top: 18px;
 }
 
 #dialog-connect-results {
