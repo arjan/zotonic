@@ -30,13 +30,11 @@ limitations under the License.
 
 
 @baseMargin: 15px;
-@baseFont: 13px;
 
 /* bootstrap structure
    --------------------------------------------------------- */
 
 body {
-    font-size: @baseFont;
     
     div.admin-container {
         margin: @baseMargin;
@@ -55,13 +53,6 @@ body {
     }
 }
 
-.btn {
-    font-size: @baseFont;
-    &.btn-xs {
-        font-size: @baseFont - 1px;
-    }
-}
-
 hr {
     background-color: #ddd;
     border-top-color: #d0d0d0;
@@ -69,6 +60,19 @@ hr {
     width: 100%;
 }
 
+
+// #00bef8, #069cd1
+
+.navbar-right {
+    margin-right: 0;
+}
+
+.navbar-nav>li>a {
+    text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+.navbar-brand>img {
+    margin-top: -2px;
+}
 
 /* footer edit nav
    --------------------------------------------------------- */
@@ -96,6 +100,7 @@ div.cropguide.vert {
    --------------------------------------------------------- */
 
 .navbar-fixed-save {
+    z-index: 1000;
     opacity: 0;
     position: fixed;
     top: 50px;
@@ -779,4 +784,17 @@ div.tab-content {
 
 .form-field-error {
     background: #ffeeee;
+}
+
+// connect dialog
+
+.thumbnail {
+    min-height: 80px;
+    h6 {
+        color: #999;
+        margin: 0;
+    }
+    h5 {
+        margin: 3px 0;
+    }
 }
