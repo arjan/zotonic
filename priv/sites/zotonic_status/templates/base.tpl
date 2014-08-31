@@ -13,7 +13,7 @@
 	{% all include "_html_head.tpl" %}
 
 	{% lib
-		"bootstrap/css/bootstrap.min.css"
+		"bootstrap-3/css/bootstrap.min.css"
 		"css/jquery.loadmask.css" 
 		"css/project.css"
 	%}
