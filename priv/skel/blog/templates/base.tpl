@@ -17,8 +17,8 @@
 		{% all include "_html_head.tpl" %}
 
 		{% lib
-			"bootstrap/css/bootstrap.min.css"
-			"bootstrap/css/bootstrap-responsive.min.css"
+			"bootstrap-3/css/bootstrap.min.css"
+			"bootstrap-3/css/bootstrap-theme.min.css"
 			"css/jquery.loadmask.css"
 			"css/z-menu.css"
 			"css/project.css"
@@ -28,15 +28,14 @@
 	</head>
 	<body class="{% block page_class %}page{% endblock %}">
 
-		<div class="navbar navbar-fixed-top">
+		<div class="navbar navbar-default navbar-fixed-top">
 
 			<div class="container">
-				<div class="container">
-				<a class="navbar-brand" href="/">{{ m.config.site.title.value|default:"Your Zotonic Site" }} {% if m.config.site.subtitle.value %}{% endif %}</a>
+				<div class="navbar-header">
+				    <a class="navbar-brand" href="/">{{ m.config.site.title.value|default:"Your Zotonic Site" }} {% if m.config.site.subtitle.value %}{% endif %}</a>
 					{# <span>{{ m.config.site.subtitle.value }}</span> #}
-
-					{% menu id=id %}
 				</div>
+				{% menu id=id %}
 			</div>
 		</div>
 		<!-- end navbar -->
