@@ -1,4 +1,4 @@
-<div class="col-lg-3 col-md-3">
+<div class="col-lg-4 col-md-4">
 	<div class="thumbnail" data-id="{{ id }}">
 		{% image id.medium mediaclass="admin-list-overview" class="thumb pull-left" %}
         <h6>{{ id.category_id.title }}</h6>
