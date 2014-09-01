@@ -232,6 +232,9 @@ table.do_adminLinkedTable td a.view-link {
   padding: 8px;
   color: inherit;
 }
+a.view-link .buttons {
+  margin-top: -2px;
+}
 .table > thead > tr > th {
   border-width: 1px;
 }
@@ -572,7 +575,8 @@ body[dir=rtl] label {
 .admin-logon {
   margin: auto;
   margin-top: 100px;
-  width: 400px;
+  max-width: 480px;
+  width: 100%;
 }
 .admin-logon form {
   padding: 16px;
@@ -582,6 +586,11 @@ body[dir=rtl] label {
 }
 .admin-logon div.buttons {
   margin-top: 30px;
+}
+.admin-logon .widget-header {
+  font-size: 18px;
+  padding: 8px;
+  color: #333;
 }
 #logon_error {
   padding: 16px;

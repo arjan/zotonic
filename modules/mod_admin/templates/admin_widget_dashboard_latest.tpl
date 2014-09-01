@@ -55,7 +55,7 @@
                             </td>
                             <td>
                                 {{ id.category_id.short_title|default:id.category_id.title }}
-                                <span class="pull-right">
+                                <span class="pull-right buttons">
                                     {% if id.page_url %}<a href="{{ id.page_url }}" class="btn btn-default btn-xs">{_ view _}</a>{% endif %}
                                     <a href="{% url admin_edit_rsc id=id %}" class="btn btn-default btn-xs">{_ edit _}</a>
                                 </span>
@@ -63,7 +63,7 @@
                         {% else %}
                             <td>
                                 {{ id.category_id.short_title|default:id.category_id.title }}
-                                <span class="pull-right">
+                                <span class="pull-right buttons">
                                     {% if id.page_url %}<a href="{{ id.page_url }}" class="btn btn-default btn-xs">{_ view _}</a>{% endif %}
                                     <a href="{% url admin_edit_rsc id=id %}" class="btn btn-default btn-xs">{_ edit _}</a>
                                 </span>
