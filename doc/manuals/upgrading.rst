@@ -12,6 +12,19 @@ incompatible ways or get deprecated.
 Upgrading to Zotonic 0.11
 -------------------------
 
+Bootstrap CSS version 3
+.......................
+
+Zotonic has been switched over to the latest version of the Bootstrap
+Framework. When you are using Zotonic's ``mod_bootstrap`` or when you
+have customized the admin templates, you will need to update your
+templates.
+
+A full migration guide to upgrading from Bootstrap 2.x is here:
+http://getbootstrap.com/migration/, a tool to help you convert the
+templates is located here: https://github.com/arjan/bootstrap3-upgrader.
+
+
 Configuration change
 ....................
 
