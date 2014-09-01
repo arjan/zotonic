@@ -290,6 +290,10 @@ table.do_adminLinkedTable td a.view-link {
     padding: 8px;
     color: inherit;
 }
+a.view-link .buttons {
+    margin-top: -2px;
+}
+
 .table>thead>tr>th {
     border-width: 1px;
 }
@@ -686,18 +690,26 @@ body[dir=rtl] label {
 .admin-logon {
     margin: auto;
     margin-top: 100px;
-    width: 400px;
-}
-.admin-logon form {
-    padding: 16px;
-}
+    max-width: 480px;
+    width: 100%;
+    
+    form {
+        padding: 16px;
+    }
 
-.admin-logon div.buttons p {
-    margin-top: 9px;
-}
+    div.buttons p {
+        margin-top: 9px;
+    }
 
-.admin-logon div.buttons {
-    margin-top: 30px;
+    div.buttons {
+        margin-top: 30px;
+    }
+
+    .widget-header {
+        font-size: 18px;
+        padding: 8px;
+        color: #333;
+    }
 }
 
 #logon_error {

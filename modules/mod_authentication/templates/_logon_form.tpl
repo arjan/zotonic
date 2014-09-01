@@ -24,7 +24,7 @@
 
     <div class="form-group">
         <div>
-	        <button class="btn btn-primary btn-lg pull-right" style="margin-right: 10px" type="submit">{_ Log on _}</button>
+	        <button class="btn btn-primary btn-lg pull-right" type="submit">{_ Log on _}</button>
 	        <div class="checkbox"><label title="{_ Stay logged on unless I log off. _}">
             	<input type="checkbox" name="rememberme" value="1" />
                 {_ Remember me _}
