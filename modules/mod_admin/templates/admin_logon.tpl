@@ -7,11 +7,9 @@
 {% block bodyclass %}noframe{% endblock %}
 
 {% block navigation %}
-<div class="navbar navbar-fixed-top">
-    <div class="container">
-        <div class="container">
-            <a class="navbar-brand" href="http://{{ m.site.hostname }}" title="{_ visit site _}"><span class="zotonic-logo"></span></a>
-        </div>
+<div class="navbar navbar-default navbar-fixed-top">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="http://{{ m.site.hostname }}" title="{_ visit site _}"><span class="zotonic-logo"></span></a>
     </div>
 </div>
 {% endblock %}
