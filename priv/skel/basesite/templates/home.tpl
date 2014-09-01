@@ -5,9 +5,9 @@
 {% block main %}
 
 <div class="jumbotron">
+    {% button class="pull-right btn btn-primary btn-lg" action={redirect dispatch=`admin`} text=_"Visit Admin Interface" %}
     <h1>{{ m.rsc.page_home.title }}</h1>
     <p>{{ m.rsc.page_home.summary }}</p>
-    {% button class="pull-right btn btn-primary btn-lg" action={redirect dispatch=`admin`} text=_"Visit Admin Interface" %}
 </div>
 
 {{ m.rsc.page_home.body|show_media }}
