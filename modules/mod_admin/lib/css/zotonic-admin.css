@@ -583,7 +583,7 @@ body[dir=rtl] label {
 /* admin logon */
 .admin-logon {
   margin: auto;
-  margin-top: 100px;
+  margin-top: 150px;
   max-width: 480px;
   width: 100%;
 }
@@ -695,7 +695,8 @@ div.modal div.tab-content {
 .modal-dialog .nav {
   margin-bottom: 12px;
 }
-.form-field-error {
+textarea.form-field-error,
+input.form-field-error {
   background: #ffeeee;
 }
 .thumbnail {

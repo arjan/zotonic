@@ -7,9 +7,8 @@
 {% block bodyclass %}noframe{% endblock %}
 
 {% block navigation %}
-<div class="navbar navbar-fixed-top">
-    <div class="container">
-        <div class="container">
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="navbar-header">
             <a class="navbar-brand" href="http://{{ m.site.hostname }}" title="{_ visit site _}"><img alt="zotonic logo" src="/lib/images/admin_zotonic.png" width="106" height="20"></a>
         </div>
     </div>
