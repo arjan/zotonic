@@ -13,8 +13,9 @@
 
 	{% all include "_html_head.tpl" %}
 	{% lib 
-	        "bootstrap/css/bootstrap.css" 
-	        "bootstrap/css/bootstrap-responsive.css" 
+	    "bootstrap/css/bootstrap.css"
+    %}    
+	{% lib 
 	        "bootstrap/css/bootstrap-base-site.css" 
 	        "css/jquery.loadmask.css" 
 	        "css/z.logo.css" 
