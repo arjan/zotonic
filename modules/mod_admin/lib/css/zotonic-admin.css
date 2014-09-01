@@ -167,6 +167,9 @@ div.widget div.widget-content .rsc-item img {
 div.widget.dark {
   background: #ddd;
 }
+div.widget.dark .widget-header {
+  background: #ddd;
+}
 li > div.widget {
   border-radius: 0 0 4px 4px;
 }
@@ -179,10 +182,16 @@ li h3.widget-header {
   padding: 6px;
   font-size: inherit;
   font-weight: normal;
-  background: #ddd;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: #dddddd;
+  background: -webkit-gradient(linear, left top, left bottom, from(#dddddd), to(#eeeeee));
+  background: -webkit-linear-gradient(top, #dddddd, #eeeeee);
+  background: -moz-linear-gradient(top, #dddddd, #eeeeee);
+  background: -ms-linear-gradient(top, #dddddd, #eeeeee);
+  background: -o-linear-gradient(top, #dddddd, #eeeeee);
 }
 .widget-header .pull-right {
-  margin: -4px;
+  margin: -2px;
 }
 .widget-header i.pull-right.glyphicon {
   margin: 1px;
@@ -588,8 +597,16 @@ body[dir=rtl] label {
   margin-top: 30px;
 }
 .admin-logon .widget-header {
-  font-size: 18px;
+  font-size: 17px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: #dddddd;
+  background: -webkit-gradient(linear, left top, left bottom, from(#dddddd), to(#eeeeee));
+  background: -webkit-linear-gradient(top, #dddddd, #eeeeee);
+  background: -moz-linear-gradient(top, #dddddd, #eeeeee);
+  background: -ms-linear-gradient(top, #dddddd, #eeeeee);
+  background: -o-linear-gradient(top, #dddddd, #eeeeee);
   padding: 8px;
+  padding-top: 12px;
   color: #333;
 }
 #logon_error {

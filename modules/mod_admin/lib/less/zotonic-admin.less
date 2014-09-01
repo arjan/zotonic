@@ -192,6 +192,9 @@ div.widget {
 
     &.dark {
         background: #ddd;
+        .widget-header {
+            background: #ddd;
+        }
     }
 }
 
@@ -212,10 +215,11 @@ li {
     padding: 6px;
     font-size: inherit;
     font-weight: normal;
-    background: #ddd;
+    text-shadow: 0 1px 0 rgba(255,255,255,.5);
+    .gradient(#dddddd, #eee);
     
     .pull-right {
-        margin: -4px;
+        margin: -2px;
     }
     i.pull-right.glyphicon {
         margin: 1px;
@@ -695,8 +699,11 @@ body[dir=rtl] label {
     }
 
     .widget-header {
-        font-size: 18px;
+        font-size: 17px;
+        text-shadow: 0 1px 0 rgba(255,255,255,.5);
+        .gradient(#ddd, #eee);
         padding: 8px;
+        padding-top: 12px;
         color: #333;
     }
 }
