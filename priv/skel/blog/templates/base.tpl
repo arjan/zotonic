@@ -17,8 +17,8 @@
 		{% all include "_html_head.tpl" %}
 
 		{% lib
-			"bootstrap-3/css/bootstrap.min.css"
-			"bootstrap-3/css/bootstrap-theme.min.css"
+			"bootstrap/css/bootstrap.min.css"
+			"bootstrap/css/bootstrap-theme.min.css"
 			"css/jquery.loadmask.css"
 			"css/z-menu.css"
 			"css/project.css"
@@ -28,7 +28,7 @@
 	</head>
 	<body class="{% block page_class %}page{% endblock %}">
 
-		<div class="navbar navbar-default navbar-fixed-top">
+		<div class="navbar navbar-inverse navbar-fixed-top">
 
 			<div class="container">
 				<div class="navbar-header">
@@ -63,7 +63,7 @@
 			</div>
 
 			<div class="row">
-				<div class="col-lg-12 col-md-12" id="footer">
+				<div class="col-lg-12 col-md-12 clearfix" id="footer">
 					<div class="pull-right">
 						<p class="footer-blog-title">{% include "_powered_by_zotonic.tpl" %}</p>
 					</div>
@@ -75,6 +75,7 @@
 		{% include "_js_include_jquery.tpl" %}
 		{% lib
 			"bootstrap/js/bootstrap.min.js"
+			"js/modules/ubf.js"
 			"js/apps/zotonic-1.0.js"
 			"js/apps/z.widgetmanager.js"
             "js/modules/ubf.js"
