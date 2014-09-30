@@ -6,7 +6,7 @@ setTimeout(function() {
 		}});
 	}, 1);
 	
-$('#rscform').on('shown', '.language-tabs > li > a[data-toggle="tab"]', function (e) {
+    $('#rscform').on('shown.bs.tab', '.language-tabs > li > a[data-toggle="tab"]', function (e) {
 	if (e.target != e.relatedTarget) {
 		var lang = $(e.target).parent().attr('lang');
 		$("li[lang='"+lang+"']:visible > a").tab('show');
